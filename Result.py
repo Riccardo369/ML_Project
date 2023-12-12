@@ -1,3 +1,6 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
 def Graph(MetricsData: dict, Colors, LabelX, Title):
   DataList = list(MetricsData.values())
   if(sum(map(len, DataList)))/len(DataList) != len(DataList[0]): raise ValueError("All metrics must be on same size")
@@ -19,9 +22,3 @@ def Graph(MetricsData: dict, Colors, LabelX, Title):
 
   plt.legend()
   plt.show()
-
-Metrics = dict()
-
-Metrics["Training loss"] = [1,2,3,4,5,6,7,8,9,10]
-Metrics["Validation loss"] = [1,5,2,7,3,4,9,8,7,10]
-

@@ -1,3 +1,5 @@
+from NeuralNetwork import *
+
 NN1 = NeuralNetwork(2, 1, lambda yo, yt: 1/2 * (yo - yt)**2)
 
 InputNeurons = NN1.GetAllInputNeurons()

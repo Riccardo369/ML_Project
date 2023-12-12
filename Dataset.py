@@ -1,3 +1,5 @@
+import numpy as np
+
 def TakeDataset(path):
   Data = np.genfromtxt(path, delimiter=',', skip_header = 7,dtype=np.float64)[:, 1:]
   Result = [np.array([i[:-3], i[-3:]]) for i in Data]

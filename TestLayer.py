@@ -1,3 +1,6 @@
+from Layer import *
+from Neuron import *
+
 L1 = Layer(OutputNeuron, 5, lambda x, y: x)
 L2 = Layer(InputNeuron, 4)
 L3 = Layer(ActivationNeuron, 3, lambda x: x, lambda x, y: x, lambda x, y: 0, lambda x, y: 0, 1)

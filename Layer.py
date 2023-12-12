@@ -1,3 +1,7 @@
+import random
+
+from Neuron import *
+
 class Layer:
   def __init__(self, Type: type, Number, *args):
 

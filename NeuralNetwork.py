@@ -1,3 +1,11 @@
+import json
+import numpy as np
+from types import LambdaType
+
+from BasedTools import *
+from Layer import *
+from Bridge import *
+
 class NeuralNetwork:
   def __init__(self, InputNumber: int, OutputNumber: int, LossLambdaFunctionEvaluation: LambdaType):
 

@@ -1,3 +1,6 @@
+from Neuron import *
+from Regularization import *
+
 ListInputNeurons = [InputNeuron() for i in range(10)]
 ApplyDropOut(ListInputNeurons, 0.2)
 

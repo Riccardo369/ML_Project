@@ -5,7 +5,7 @@ from Neuron import *
 #Responsabilità, rappresentare un ponte, tenendo conto del neurone di partenza, di fine e del suo peso
 class Bridge:
 
-  def __init__(self, StartNeuron: Neuron, FinishNeuron: Neuron, *args):
+  def __init__(self, StartNeuron, FinishNeuron, *args):
     self.__UsedCount = 0
     self.__StartNeuron = StartNeuron
     self.__FinishNeuron = FinishNeuron
