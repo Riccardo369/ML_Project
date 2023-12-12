@@ -1,0 +1,1 @@
+Graph(Metrics, ["red", "blue"], "Cycle", "Title 1")
