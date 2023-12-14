@@ -32,10 +32,12 @@ class Neuron:
 
     self.__GradientLossFunction = DerivationLambda(self.__LossFunction, 0)
     self.__BeforeGradientLossFunction = lambda x, y: (x, y)
+    
+    
 
-  def CalculateUpdatedWeights(self, LossGradientValue,*args):
-    LossGradientValue = self.__BeforeUpdateWeightsFunction(LossGradientValue,*args)
-    return self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue,*args)
+  def CalculateUpdatedWeights(self, LossGradientValue):
+    LossGradientValue = self.__BeforeUpdateWeightsFunction(LossGradientValue)
+    return self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue)
 
   def CalculateUpdateBias(self, LossGradientValue):
     LossGradientValue = self.__BeforeUpdateBiasFunction(LossGradientValue)
@@ -48,20 +50,38 @@ class Neuron:
   def CalculateDerivationLoss(self, CalculatedOutput, TargetOutput):
     CalculatedOutput, TargetOutput = self.__BeforeGradientLossFunction(CalculatedOutput, TargetOutput)
     return self.__GradientLossFunction(CalculatedOutput, TargetOutput)
+  
+
 
   def SetUpdateWeightsFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
     self.__UpdateWeightsFunction = Function
 
-  def SetBiasUpdateFunction(self, Function: LambdaType):
+  def SetUpdateBiasFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
     self.__UpdateBiasFunction = Function
 
   def SetLossFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
     self.__LossFunction = Function
-    self.__GradientLossFunction = DerivationLambda(self.__LossFunction, 0)
+    self.__GradientLossFunction = DerivationLambda(Function, 0)
+     
+  def SetBeforeUpdateWeightsFunction(self, Function: LambdaType):
+    CheckParametersFunction(Function, 1)
+    self.__BeforeUpdateWeightsFunction = Function
 
+  def SetBeforeUpdateBiasFunction(self, Function: LambdaType):
+    CheckParametersFunction(Function, 1)
+    self.__BeforeUpdateBiasFunction = Function
+
+  def SetBeforeLossFunction(self, Function: LambdaType):
+    CheckParametersFunction(Function, 2)
+    self.__BeforeLossFunction = Function
+    
+  def SetBeforeGradientLossFunction(self, Function: LambdaType):
+    CheckParametersFunction(Function, 2)
+    self.__BeforeGradientLossFunction = Function
+    
   def TurnOn(self):
     self.__ActivedState = True
 
