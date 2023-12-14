@@ -77,7 +77,7 @@ class Neuron:
   def ResetInputVector(self):
     self._InputVector = [None for i in range(len(self._InputVector))]
 
-  def LoadInputFromBridge(self, b: Bridge, x):
+  def LoadInputFromBridge(self, b, x):
     EnterBridgeList = self.GetSetEnterBridge()
     SelectedBridge = None
 
@@ -91,11 +91,11 @@ class Neuron:
     self._InputVector[i] = SelectedBridge.Weight * x
     return True
 
-  def AddBridge(self, b: Bridge):
+  def AddBridge(self, b):
     self._Bridges.append(b)
     self._InputVector.append(None)
 
-  def RemoveBridge(self, b: Bridge):
+  def RemoveBridge(self, b):
     i = self.GetSetEnterBridge().index(b)
     self._Bridges.remove(b)
     self._InputVector.pop(i)
