@@ -50,8 +50,6 @@ class Neuron:
   def CalculateDerivationLoss(self, CalculatedOutput, TargetOutput):
     CalculatedOutput, TargetOutput = self.__BeforeGradientLossFunction(CalculatedOutput, TargetOutput)
     return self.__GradientLossFunction(CalculatedOutput, TargetOutput)
-  
-
 
   def SetUpdateWeightsFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
