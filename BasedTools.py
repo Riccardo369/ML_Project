@@ -6,7 +6,6 @@ import sympy as sp
 def CheckParametersFunction(Function, n):
   if(Function.__code__.co_argcount != n): raise ValueError(f"This function has {n} parameters, but it has {Function.__code__.co_argcount} arguments")
 
-
 #This function take lambda function with more variables and get own derivate function, with one variable
 def DerivationLambda(Lambda, i):
   VariablesName = Lambda.__code__.co_varnames[:Lambda.__code__.co_argcount]
@@ -16,7 +15,6 @@ def DerivationLambda(Lambda, i):
   Result = sp.lambdify(VariablesName, Derivate)
   return Result
 
-
 #This class represents a vector gradient
 class Gradient:
   def __init__(self, Function: LambdaType):
@@ -24,3 +22,10 @@ class Gradient:
 
   def __call__(self, *InputVector):
     return np.array([i(*InputVector) for i in self.__GradientVector])
+  
+class HyperParameter:
+  def __init__(self, Value):
+    self.Value = Value
+    
+  def __call__(self):
+    return self.Value
