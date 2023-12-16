@@ -26,3 +26,15 @@ H1.Value = 10
 
 assert Lambda(10) == 100
 assert Lambda(2) == 20
+
+e = 2
+
+Lambda1 = lambda x: x*e
+
+assert Lambda1(1) == 2
+assert Lambda1(2) == 4
+
+e = 10
+
+assert Lambda1(1) == 10
+assert Lambda1(7) == 70
