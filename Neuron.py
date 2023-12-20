@@ -33,7 +33,6 @@ class Neuron:
     self.__GradientLossFunction = DerivationLambda(self.__LossFunction, 0)
     self.__BeforeGradientLossFunction = lambda x, y: (x, y)
     
-    
 
   def CalculateUpdatedWeights(self, LossGradientValue):
     LossGradientValue = self.__BeforeUpdateWeightsFunction(LossGradientValue)

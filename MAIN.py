@@ -17,6 +17,7 @@ from Phase import *
 from Regularization import *
 from Result import *
 
+
 def weights_update_function(weigths,GradientLoss,LearningRate=0.1,WeightDecay=0):
   return list(map(lambda w: w +LearningRate*(GradientLoss + WeightDecay*w),weigths)) # nota : 0.1 = eta
 

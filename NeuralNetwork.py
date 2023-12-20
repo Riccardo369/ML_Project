@@ -246,14 +246,15 @@ class NeuralNetwork:
     for i in self.GetAllNeurons(): NeuronsLoss[i] = 0
 
     #Update loss associated to output neuron
-    # nota : sarebbe il signal error nel pdf della backprop
+    #Note: They are signal error starting from otuput neurons
     for i in self.__OutputNeuronVector: NeuronsLoss[i] = LossValueVector[i] * i.CalculateGradientActivationFunction()
 
     i = 0
-
+    
+    #For each neuron to touch
     while(len(NeuronsToUpdate) > 0):
 
-      ActualNeuron = NeuronsToUpdate[i]    #Choosed neuron to analyze
+      ActualNeuron = NeuronsToUpdate[i]    #Choose neuron to analyze
 
       try:
         if(sum(map(lambda r: r.Weight, ActualNeuron.GetSetEnterBridge())) != 0):   #If actual neuron hasn't received all updates of the loss, pass to the next one
@@ -261,23 +262,28 @@ class NeuralNetwork:
           continue
       except: pass
 
-      #Calculates bridges
+      #Take bridges
       ActualBridges = ActualNeuron.GetSetEnterBridge()
 
-      #Calculate GradientDirection
-      GradientDirection = - ActualNeuron.CalculateDerivationLoss(self.__NeuronsLastOutput[ActualNeuron], NeuronsLoss[ActualNeuron])
+      #Calculate St
+      #Note: DEp / Dot * ft'(nett) = St
+      St = - ActualNeuron.CalculateDerivationLoss(self.__NeuronsLastOutput[ActualNeuron], NeuronsLoss[ActualNeuron]) * ActualNeuron.CalculateGradientActivationFunction() 
+    
+      #ActualNeuron = Neuron t
+      #NeuronsLoss[r.GetStartNeuron()] = Neuron j
+      
       #Spread GradientDirection from current neuron
       for r in ActualBridges:
 
         if(r.GetStartNeuron() == None): continue
 
-        NeuronsLoss[r.GetStartNeuron()] += GradientDirection * r.Weight
+        NeuronsLoss[r.GetStartNeuron()] += St * r.Weight   #St * Wtj
         r.ResetUsedCount()
 
         if(r.GetStartNeuron() not in NeuronsToUpdate):
           NeuronsToUpdate.append(r.GetStartNeuron())
 
-        NeuronsLoss[r.GetStartNeuron()] *= r.GetStartNeuron().CalculateGradientActivationFunction()
+        NeuronsLoss[r.GetStartNeuron()] *= r.GetStartNeuron().CalculateGradientActivationFunction() #(sum) * fj'(nett)
 
       #Calculate new weights
       NewWeights = ActualNeuron.CalculateUpdatedWeights(NeuronsLoss[ActualNeuron])
@@ -344,7 +350,7 @@ class NeuralNetwork:
       self.__Biases = Result["Biases"]
 
     def __eq__(self, obj):
-      if(not isinstance(obj, NeuralNetworkState)): return False
+      if(not isinstance(obj, self.__class__.__name__)): return False
       if(len(self.__Weights) != len(obj.__Weights) and len(self.__Biases) != len(obj.__Biases)): return False
 
       for i in range(len(self.__Weights)):
