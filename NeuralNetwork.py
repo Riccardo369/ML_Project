@@ -166,145 +166,59 @@ class NeuralNetwork:
 
     return np.array(Result)
   
-
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  def Learn1(self,LossValue:np.array,Hyperparameters):
-    if(len(LossValue)!=len(self.__OutputNeuronVector)): raise ValueError("the loss values must be as long as the number of output neurons")
-
-    NeuronsToUpdate = list(self.__OutputNeuronVector)  #Save which neurons must be still updated
-
-    #Save all loss values of all neurons
-    NeuronsLoss = dict()
-    for neuron in self.GetAllNeurons(): NeuronsLoss[neuron] = 0
-
-    #Update loss associated to output neuron
-    for i,neuron in enumerate(self.__OutputNeuronVector):
-      NeuronsLoss[neuron] = LossValue[i] * neuron.CalculateGradientActivationFunction()
-
-    i = 0
-
-    while(len(NeuronsToUpdate) > 0):
-
-      ActualNeuron = NeuronsToUpdate[i]    #Choosed neuron to analyze
-
-      try:
-        if(sum(map(lambda r: r.Weight, ActualNeuron.GetSetEnterBridge())) != 0):   #If actual neuron hasn't received all updates of the loss, pass to the next one
-          i = (i+1) % len(NeuronsToUpdate)
-          continue
-      except: pass
-
-      #Calculates bridges
-      ActualBridges = ActualNeuron.GetSetEnterBridge()
-
-      #Calculate GradientDirection
-      #GradientDirection = - ActualNeuron.CalculateDerivationLoss(self.__NeuronsLastOutput[ActualNeuron], NeuronsLoss[ActualNeuron])
-      #Spread GradientDirection from current neuron to other neurons throudh hidden layer
-      for r in ActualBridges:
-
-        if(r.GetStartNeuron() == None): continue
-
-        NeuronsLoss[r.GetStartNeuron()] += NeuronsLoss[r.GetFinishNeuron()] * r.Weight
-        r.ResetUsedCount()
-
-        if(r.GetStartNeuron() not in NeuronsToUpdate):
-          NeuronsToUpdate.append(r.GetStartNeuron())
-
-        NeuronsLoss[r.GetStartNeuron()] *= -r.GetStartNeuron().CalculateGradientActivationFunction()
-
-      #Calculate new weights
-      NewWeights = ActualNeuron.CalculateUpdatedWeights(NeuronsLoss[ActualNeuron],ActualNeuron.Calculate(),*Hyperparameters)
-
-      #Update weights
-      for r in range(len(ActualBridges)):
-        if(ActualBridges[r] not in ActualBridges): continue
-        ActualBridges[r].Weight = NewWeights[r]
-
-      #Update bias
-      ActualNeuron.BiasValue = ActualNeuron.CalculateUpdateBias(NeuronsLoss[ActualNeuron])
-
-      #Reset Neuron loss
-      NeuronsLoss[ActualNeuron] = 0
-
-      del NeuronsToUpdate[i]
-      
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   def Learn(self, LossValueVector):
     
     #Check length parameter
     if(len(LossValueVector) != len(self.__OutputNeuronVector)): raise ValueError(f"{len(self.__OutputNeuronVector)} Output neurons but {len(LossValueVector)} loss values insert")
-
-    NeuronsToUpdate = [i for i in self.__OutputNeuronVector]  #Save which neurons must be still updated
+    
+    #Save which neurons must be still updated
+    NeuronsToUpdate = self.GetAllInputNeurons() + self.GetAllHiddenNeurons()  
 
     #Save all loss values of all neurons
     NeuronsLoss = dict()
-    for i in self.GetAllNeurons(): NeuronsLoss[i] = 0
+    for i in self.GetAllNeurons(): NeuronsLoss[i] = None
 
-    #Update loss associated to output neuron
-    #Note: They are signal error starting from otuput neurons
-    for i in self.__OutputNeuronVector: NeuronsLoss[i] = LossValueVector[i] * i.CalculateGradientActivationFunction()
-
+    #Calculate Signal error Sk for output neuron (k index of output neuron)
+    for k in self.GetAllOutputNeurons: NeuronsLoss[k] = LossValueVector[k] * k.CalculateGradientActivationFunction()
+    
+    #Index using for control list of neurons to still update
     i = 0
     
-    #For each neuron to touch
+    #FIRST STEP: assign for each neuron (input, hidden and output) own signal error
+    
+    #For each neuron to still update
     while(len(NeuronsToUpdate) > 0):
 
-      ActualNeuron = NeuronsToUpdate[i]    #Choose neuron to analyze
-
-      try:
-        if(sum(map(lambda r: r.Weight, ActualNeuron.GetSetEnterBridge())) != 0):   #If actual neuron hasn't received all updates of the loss, pass to the next one
-          i = (i+1) % len(NeuronsToUpdate)
-          continue
-      except: pass
-
-      #Take bridges
-      ActualBridges = ActualNeuron.GetSetEnterBridge()
-
-      #Calculate St
-      #Note: DEp / Dot * ft'(nett) = St
-      St = - ActualNeuron.CalculateDerivationLoss(self.__NeuronsLastOutput[ActualNeuron], NeuronsLoss[ActualNeuron]) * ActualNeuron.CalculateGradientActivationFunction() 
-    
-      #ActualNeuron = Neuron t
-      #NeuronsLoss[r.GetStartNeuron()] = Neuron j
+      ActualNeuron = NeuronsToUpdate[i]   #Choose neuron to analyze
       
-      #Spread GradientDirection from current neuron
-      for r in ActualBridges:
-
-        if(r.GetStartNeuron() == None): continue
-
-        NeuronsLoss[r.GetStartNeuron()] += St * r.Weight   #St * Wtj
-        r.ResetUsedCount()
-
-        if(r.GetStartNeuron() not in NeuronsToUpdate):
-          NeuronsToUpdate.append(r.GetStartNeuron())
-
-        NeuronsLoss[r.GetStartNeuron()] *= r.GetStartNeuron().CalculateGradientActivationFunction() #(sum) * fj'(nett)
-
-      #Calculate new weights
-      NewWeights = ActualNeuron.CalculateUpdatedWeights(NeuronsLoss[ActualNeuron])
-
-      #Update weights
-      for r in range(len(ActualBridges)):
-        if(ActualBridges[r] not in ActualBridges): continue
-        ActualBridges[r].Weight = NewWeights[r]
-
-      #Update bias
-      ActualNeuron.BiasValue = ActualNeuron.CalculateUpdateBias(NeuronsLoss[ActualNeuron])
-
-      #Reset Neuron loss
-      NeuronsLoss[ActualNeuron] = 0
-
+      #Bridges to consider
+      Bridges = ActualNeuron.GetSetExitBridge()
+      
+      #If actual neuron can't get own signal error
+      if(None in list(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges)):
+        i = (i+1) % len(NeuronsToUpdate)
+        continue
+      
+      #Calculate Signal error Sj for hidden and input neuron (Actual neuron = neuron j, w is bridge to consider)
+      SignalError = sum(list(map(lambda w: w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges))) * ActualNeuron.CalculateGradientActivationFunction() 
+      
       del NeuronsToUpdate[i]
+      
+    #SECOND STEP: update bias and weights of bridges
+    
+    #Extract all neurons to update
+    NeuronsToUpdate = self.GetAllHiddenNeurons() + self.GetAllOutputNeurons()
+   
+    for Neuron in NeuronsToUpdate:
+        
+      #Update bias
+      Neuron.BiasValue = Neuron.CalculateUpdateBias(NeuronsLoss[Neuron]) 
+    
+      #Update weights
+      WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron])
+      for Weight in enumerate(Neuron.GetSetEnterBridges()): Weight[1].Weight = WeightsNewValue[0]
 
 
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   def LossFunctionEvaluation(self, OutputCalculatedVector: np.ndarray, OutputTargetVector: np.ndarray):
 
