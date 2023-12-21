@@ -202,6 +202,8 @@ class NeuralNetwork:
       #Calculate Signal error Sj for hidden and input neuron (Actual neuron = neuron j, w is bridge to consider)
       SignalError = sum(list(map(lambda w: w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges))) * ActualNeuron.CalculateGradientActivationFunction() 
       
+      NeuronsLoss[ActualNeuron] = SignalError
+      
       del NeuronsToUpdate[i]
       
     #SECOND STEP: update bias and weights of bridges
