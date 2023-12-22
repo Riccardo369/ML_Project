@@ -18,18 +18,19 @@ from Regularization import *
 from Result import *
 
 
-def BuildTwoLevelFeedForward(InputSize,HiddenSize,OutputSize,LossFunction,WeightsUpdateFunction):
-  NN=NeuralNetwork(InputSize,OutputSize,LossFunction)
-  InputLayer=NN.GetAllInputNeurons()
-  OutputLayer=NN.GetAllOutputNeurons()
-  HiddenLayer = [ ActivationNeuron(lambda x:x,WeightsUpdateFunction,lambda x,y:0,LossFunction) for _ in range(HiddenSize) ]
-  for InputNeuron in InputLayer:
-    for HiddenNeuron in HiddenLayer:
-      InputNeuron.AddConnectionTo(HiddenNeuron)
-  for OutputNeuron in OutputLayer:
-    for HiddenNeuron in HiddenLayer:
-      HiddenNeuron.AddConnectionTo(OutputNeuron)
-  NN.CalculateAllStructure()
+def BuildTwoLevelFeedForward(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction):
+  
+  NN = NeuralNetwork(InputSize,OutputSize,LossFunction)
+  
+  InputLayer = NN.GetAllInputNeurons()
+  OutputLayer = NN.GetAllOutputNeurons()
+  HiddenLayer = Layer(ActivationNeuron, HiddenSize, lambda x: x, WeightsUpdateFunction, lambda x, y: 0, LossFunction)
+  
+  InputLayer.ConnectTo(HiddenLayer)
+  HiddenLayer.ConnectTo(OutputLayer) 
+      
+  NN.CalculateAllStructure() 
+  
   return NN
 
 def ModelSelection(Model,DataSet,LearningRate,WeightDecay,FoldsNumber,BatchDimension,Steps=50):
