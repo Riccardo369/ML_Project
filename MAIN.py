@@ -17,6 +17,7 @@ from Phase import *
 from Regularization import *
 from Result import *
 
+
 def BuildTwoLevelFeedForward(InputSize,HiddenSize,OutputSize,LossFunction,WeightsUpdateFunction):
   NN=NeuralNetwork(InputSize,OutputSize,LossFunction)
   InputLayer=NN.GetAllInputNeurons()
