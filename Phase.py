@@ -20,54 +20,41 @@ class TrainPhase(Phase):
   def __init__(self, Model, TrainSet):
     super().__init__(Model, TrainSet)
 
-  def Work(self,BatchDimension,**Hyperparameters):
+  def Work(self,BatchDimension):
     if(BatchDimension < 1 or BatchDimension > len(self._Dataset)): raise ValueError("batch dimension must be above 0 and lower or equal to the dataset dimension")
     Batches = BatchesExtraction(self._Dataset, BatchDimension)
 
     TotalLossValue = 0
 
     for Batch in Batches:
-      #Do mean of all loss values
       LossValue = 0
       for r in Batch:
         InputVector=r[0]
         TargetValue=r[1]
-        LossValue += self._Model.GetLossLambdaFunctionEvaluation()(self._Model.Predict(InputVector), TargetValue)
-
-      LossValue /= len(Batch)
-
-      #Add loss value batch to total loss value
-      TotalLossValue += LossValue
-
-      #Calculate gradient
-      #DirectionLoss = self._Model.GradientDirectionLoss(LossValue)
-
-      #Learn model
-      self._Model.Learn(TotalLossValue)
-
-    #Apply mean of all loss values
-    self._Metrics["Loss"].append(TotalLossValue / len(Batches))   
+        OutputValue=self._Model.Predict(InputVector)
+        DirectionLoss = self._Model.GradientDirectionLoss(OutputValue,TargetValue)
+        self._Model.Learn(DirectionLoss)
+        LossValue += self._Model.GetLossLambdaFunctionEvaluation()(OutputValue, TargetValue)
+      LossValue/=len(Batch)
+      TotalLossValue+=LossValue
+    self._Metrics["Loss"].append(TotalLossValue/len(Batches))   
     
 class EvaluationPhase(Phase):
   def __init__(self, Model, DataSet, n):
     super().__init__(Model, DataSet, n, lambda: True)
 
-  def Work(self):
+  def Work(self,BatchDimension):
 
-    Batches = BatchesExtraction(self._Dataset, 1)
+    Batches = BatchesExtraction(self._Dataset, BatchDimension)
 
-    TotalLossValue = 0
+    #TotalLossValue = 0
 
     for Batch in Batches:
-
-      #Do mean of all loss values
       LossValue = 0
-
       for r in Batch: LossValue += self._Model.GetLossLambdaFunctionEvaluation(self._Model.Predict(r[0]), r[1])
-      LossValue /= len(r)
+    self._Metrics["Loss"].append(LossValue / len(Batches))
 
       #Add loss value batch to total loss value
-      TotalLossValue += LossValue
+      #TotalLossValue += LossValue
 
     #Apply mean of all loss values
-    self._Metrics["Loss"].append(TotalLossValue / len(Batches))
