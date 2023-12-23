@@ -1,6 +1,6 @@
 import random
 
-from Neuron import *
+import Neuron
 
 #Responsabilità, rappresentare un ponte, tenendo conto del neurone di partenza, di fine e del suo peso
 class Bridge:

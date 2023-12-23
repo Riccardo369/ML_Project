@@ -38,3 +38,4 @@ e = 10
 
 assert Lambda1(1) == 10
 assert Lambda1(7) == 70
+

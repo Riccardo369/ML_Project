@@ -22,8 +22,10 @@ def BuildTwoLevelFeedForward(InputSize, HiddenSize, OutputSize, LossFunction, We
   
   NN = NeuralNetwork(InputSize,OutputSize,LossFunction)
   
-  InputLayer = NN.GetAllInputNeurons()
-  OutputLayer = NN.GetAllOutputNeurons()
+  InputLayer = NN.GetInputLayer()
+
+  
+  OutputLayer = NN.GetOutputLayer()
   HiddenLayer = Layer(ActivationNeuron, HiddenSize, lambda x: x, WeightsUpdateFunction, lambda x, y: 0, LossFunction)
   
   InputLayer.ConnectTo(HiddenLayer)
@@ -39,7 +41,7 @@ def ModelSelection(Model,DataSet,LearningRate,WeightDecay,FoldsNumber,BatchDimen
   ValidationPerformance=[]
   cv=CrossValidation(DataSet,FoldsNumber)
   def weights_update_function(weigths,GradientLoss):
-    return list(map(lambda w: w +LearningRate*(GradientLoss + WeightDecay*w),weigths)) # nota : 0.1 = eta
+    return list(map(lambda w: w +LearningRate*(GradientLoss + WeightDecay*w),weigths))
   Model.SetAllUpdateWeightsFunctionInputNeurons(weights_update_function)
   Model.SetAllUpdateWeightsFunctionOutputNeurons(weights_update_function)
   Model.SetAllUpdateWeightsFunctionHiddenNeurons(weights_update_function)
@@ -79,8 +81,19 @@ def KFoldGraph(MetricsData: dict, Colors, LabelX, Title):
 
 
 #istance desired model
-LossFunction= lambda yo, yt: 1/2 * sum((yo - yt)**2)
-Model=BuildTwoLevelFeedForward(10,5,3,LossFunction,lambda x:x)
+LossFunction= lambda yo, yt: (1/2) * (yo-yt)*(yo-yt)
+Model=BuildTwoLevelFeedForward(10,5,3,lambda op,tp:(op-tp)**(1/2),lambda x,y:0)
+def BeforeLossFunction(output,target):
+  output_value=sp.matrices.Matrix(list(map(lambda o:[o],output)))
+  target_value=sp.matrices.Matrix(list(map(lambda t:[t],target)))
+  return output_value,target_value
+
+Neurons=Model.GetAllInputNeurons()+Model.GetAllHiddenNeurons()+Model.GetAllOutputNeurons()
+for n in Neurons:
+  n.SetBeforeLossFunction(lambda op,tp: (op[0]-tp[0])**2-(op[1]-tp[1])**2-(op[2]-tp[2])**2)
+
+
+
 #load dataset
 Data=TakeDataset('FilesData/ML-CUP23-TR.csv')
 
@@ -88,7 +101,7 @@ Data=TakeDataset('FilesData/ML-CUP23-TR.csv')
 LearningRate=np.linspace(0.1,0.9,10)
 WeightDecay=np.linspace(0,2,10)# a.k.a. Lambda in Tikohonv regularization
 FoldsNumber= [6]
-BatchDimension= [10]#TODO: cambiare con perncuatle fra 0 ed 1
+BatchDimension= [10]#TODO: cambiare con percentuale fra 0 ed 1
 threshold= np.linspace(0.1,0.9,10)
 
 #grid creation
@@ -102,7 +115,10 @@ BestModelError=float('inf')
 BestModelParameters=None
 BestModelPerformance=None
 for hyperparameters in ParameterGrid:
-  ModelPerformance=ModelSelection(Model,Data,*hyperparameters)
+  ModelPerformance=ModelSelection(Model,Data,LearningRate=hyperparameters[0],
+                                            WeightDecay=hyperparameters[1],
+                                            FoldsNumber=hyperparameters[2],
+                                            BatchDimension=hyperparameters[3])
   ValidationError=0
   FoldsPerformance=list(map(lambda fold:fold[-1],ModelPerformance["validation"]))
   ValidationError=sum(FoldsPerformance)/len(FoldsPerformance)

@@ -40,8 +40,8 @@ class TrainPhase(Phase):
     self._Metrics["Loss"].append(TotalLossValue/len(Batches))   
     
 class EvaluationPhase(Phase):
-  def __init__(self, Model, DataSet, n):
-    super().__init__(Model, DataSet, n, lambda: True)
+  def __init__(self, Model, DataSet):
+    super().__init__(Model, DataSet)
 
   def Work(self,BatchDimension):
 

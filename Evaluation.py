@@ -5,7 +5,7 @@ from types import LambdaType
 class CrossValidation:
   def __init__(self, Dataset, K):
     Data = random.sample(list(Dataset), len(Dataset))          #Shuffle data
-    self.__Folds = np.split(Data, [len(Dataset)//K])           #Split data in k folds
+    self.__Folds = np.split(np.array(Data,dtype=object), [len(Dataset)//K])           #Split data in k folds
     del Data                                                   #It is not necessary in memory anymore
 
   def GetFoldsNum(self):

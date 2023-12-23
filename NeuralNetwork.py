@@ -23,7 +23,10 @@ class NeuralNetwork:
     self.__NeuronsLastOutput = dict()
 
     self.CalculateAllStructure()
-
+  def GetInputLayer(self):
+    return self.__InputNeuronVector
+  def GetOutputLayer(self):
+    return self.__OutputNeuronVector
   def GetLossLambdaFunctionEvaluation(self):
     return self.__LambdaLossFunctionEvaluation
 

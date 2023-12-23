@@ -2,8 +2,7 @@ from types import LambdaType
 import random 
 
 from BasedTools import *
-from Bridge import *
-
+import Bridge
 #Responsabilità, rappresentare un neurone tenendo conto degl' archi di uscita, di entrata e della bias, in più calcolare la propria funzione di attivazione
 class Neuron:
 
@@ -118,14 +117,14 @@ class Neuron:
 
   def AddConnectionTo(self, FinalNeuron):
     if(self.GetExitBridgeToNeuron(FinalNeuron) != None): return False   #Se l' arco esiste già
-    CreatedBridge = Bridge(self, FinalNeuron)
+    CreatedBridge = Bridge.Bridge(self, FinalNeuron)
     self._Bridges.append(CreatedBridge)
     FinalNeuron.AddBridge(CreatedBridge)
     return True
 
   def RemoveConnectionTo(self, FinalNeuron):
     if(self.GetExitBridgeToNeuron(FinalNeuron) == None): return False   #Se l' arco non esiste ma dovrebbe esistere
-    CreatedBridge = Bridge(self, FinalNeuron)
+    CreatedBridge = Bridge.Bridge(self, FinalNeuron)
     self._Bridges.remove(CreatedBridge)
     FinalNeuron.RemoveBridge(CreatedBridge)
     return True
