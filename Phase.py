@@ -51,7 +51,7 @@ class EvaluationPhase(Phase):
 
     for Batch in Batches:
       LossValue = 0
-      for r in Batch: LossValue += self._Model.GetLossLambdaFunctionEvaluation(self._Model.Predict(r[0]), r[1])
+      for r in Batch: LossValue += self._Model.GetLossLambdaFunctionEvaluation()(self._Model.Predict(r[0]), r[1])
     self._Metrics["Loss"].append(LossValue / len(Batches))
 
       #Add loss value batch to total loss value

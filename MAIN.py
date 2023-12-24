@@ -17,14 +17,11 @@ from Phase import *
 from Regularization import *
 from Result import *
 
-
 def BuildTwoLevelFeedForward(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction):
   
   NN = NeuralNetwork(InputSize,OutputSize,LossFunction)
   
-  InputLayer = NN.GetInputLayer()
-
-  
+  InputLayer = NN.GetInputLayer()  
   OutputLayer = NN.GetOutputLayer()
   HiddenLayer = Layer(ActivationNeuron, HiddenSize, lambda x: x, WeightsUpdateFunction, lambda x, y: 0, LossFunction)
   
@@ -42,9 +39,9 @@ def ModelSelection(Model,DataSet,LearningRate,WeightDecay,FoldsNumber,BatchDimen
   cv=CrossValidation(DataSet,FoldsNumber)
   def weights_update_function(weigths,GradientLoss):
     return list(map(lambda w: w +LearningRate*(GradientLoss + WeightDecay*w),weigths))
-  Model.SetAllUpdateWeightsFunctionInputNeurons(weights_update_function)
-  Model.SetAllUpdateWeightsFunctionOutputNeurons(weights_update_function)
-  Model.SetAllUpdateWeightsFunctionHiddenNeurons(weights_update_function)
+  
+  for i in Model.GetAllNeurons(): i.SetUpdateWeightsFunction(weights_update_function)
+  
   for fold in range(cv.GetFoldsNum()):
     tr,vl = cv.GetKFold(fold)
     training=TrainPhase(Model,tr)

@@ -130,11 +130,11 @@ class Neuron:
     return True
 
   def GetEnterBridgeFromNeuron(self, StartNeuron):
-    try: return self._Bridges[self._Bridges.index(Bridge(StartNeuron, self))]
+    try: return self._Bridges[self._Bridges.index(Bridge.Bridge(StartNeuron, self))]
     except: return None
 
   def GetExitBridgeToNeuron(self, FinalNeuron):
-    try: return self._Bridges[self._Bridges.index(Bridge(self, FinalNeuron))]
+    try: return self._Bridges[self._Bridges.index(Bridge.Bridge(self, FinalNeuron))]
     except: return None
 
   def GetSetEnterBridge(self):

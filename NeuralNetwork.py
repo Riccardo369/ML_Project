@@ -7,6 +7,7 @@ from Layer import *
 from Bridge import *
 
 class NeuralNetwork:
+  
   def __init__(self, InputNumber: int, OutputNumber: int, LossLambdaFunctionEvaluation: LambdaType):
 
     CheckParametersFunction(LossLambdaFunctionEvaluation, 2)
@@ -14,72 +15,41 @@ class NeuralNetwork:
     self.__InputNeuronVector = InputLayer(InputNumber)
     self.__OutputNeuronVector = OutputLayer(OutputNumber, lambda x, y: x)
 
-    for i in self.__InputNeuronVector: i.AddBridge(Bridge(None, i, 1))                       #For creating a starting bridge to inject input neurons
-    for i in self.__OutputNeuronVector: i.SetLossFunction(LossLambdaFunctionEvaluation)      #For setting loss function of output neurons
+    for i in self.__InputNeuronVector: i.AddBridge(Bridge(None, i, 1))     #For creating a starting bridge to inject input neurons
 
     self.__LambdaLossFunctionEvaluation = LossLambdaFunctionEvaluation
     self.__GradientLossFunction = DerivationLambda(LossLambdaFunctionEvaluation, 0)
-
+    
+    self.__BeforeLambdaLossFunctionEvaluation = lambda x, y: (x, y)
+    self.__BeforeGradientLossFunction = lambda x, y: (x, y)
+    
     self.__NeuronsLastOutput = dict()
 
     self.CalculateAllStructure()
+    
   def GetInputLayer(self):
     return self.__InputNeuronVector
+  
   def GetOutputLayer(self):
     return self.__OutputNeuronVector
+  
   def GetLossLambdaFunctionEvaluation(self):
     return self.__LambdaLossFunctionEvaluation
 
-  def SetAllUpdateWeightsFunctionInputNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetInputLayer(): i.SetUpdateWeightsFunction(Function)
-
-  def SetAllBiasUpdateFunctionInputNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetInputLayer(): i.SetBiasUpdateFunction(Function)
-
-  def SetAllLossFunctionInputNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetInputLayer(): i.SetLossFunction(Function)
-
-  def SetAllUpdateWeightsFunctionHiddenNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetAllHiddenNeurons(): i.SetUpdateWeightsFunction(Function)
-
-  def SetAllBiasUpdateFunctionHiddenNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetAllHiddenNeurons(): i.SetBiasUpdateFunction(Function)
-
-  def SetAllLossFunctionHiddenNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetAllHiddenNeurons(): i.SetLossFunction(Function)
-
-  def SetAllUpdateWeightsFunctionOutputNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetOutputLayer(): i.SetUpdateWeightsFunction(Function)
-
-  def SetAllBiasUpdateFunctionOutputNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetOutputLayer(): i.SetBiasUpdateFunction(Function)
-
-  def SetAllLossFunctionOutputNeurons(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
-    for i in self.GetOutputLayer(): i.SetLossFunction(Function)
-
   def TurnOnAllNeurons(self):
-    for i in self.__AllNeurons: i.TurnOn()
+    for i in self.GetAllNeurons(): i.TurnOn()
 
   def GetAllInputNeurons(self):
     return self.__InputNeuronVector.GetNeurons()
 
   def GetAllHiddenNeurons(self):
-    return list(filter(lambda i: i not in self.__InputNeuronVector and i not in self.__OutputNeuronVector, self.__AllNeurons))
+    return list(self.__HiddeNeurons)
 
   def GetAllOutputNeurons(self):
     return self.__OutputNeuronVector.GetNeurons()
 
   def GetAllNeurons(self):
-    return list(self.__AllNeurons)
+    return self.GetAllInputNeurons() + self.GetAllHiddenNeurons() + self.GetAllOutputNeurons()
 
   def GetAllBridges(self):
     return list(self.__AllBridges)
@@ -104,15 +74,15 @@ class NeuralNetwork:
     while(i<len(CapturedNeurons)):
       Bridges = CapturedNeurons[i].GetSetExitBridge() #Calculate every bridge
       for r in Bridges:
-        if(r.GetFinishNeuron() not in CapturedNeurons): CapturedNeurons.append(r.GetFinishNeuron()) #Add neuron if not still exists in list
+        if(r.GetFinishNeuron() not in CapturedNeurons and not isinstance(r, InputNeuron) and not isinstance(r, OutputNeuron)): CapturedNeurons.append(r.GetFinishNeuron()) #Add neuron if not still exists in list
         if(r not in CapturedBridges): CapturedBridges.append(r) #Add bridge if not still exists in list
       i += 1
 
-    self.__AllNeurons = CapturedNeurons
+    self.__HiddeNeurons = CapturedNeurons
     self.__AllBridges = CapturedBridges
 
   def Clear(self):
-    for i in self.__AllNeurons: i.ResetInputVector()
+    for i in self.GetAllNeurons(): i.ResetInputVector()
     for i in self.__AllBridges: i.ResetUsedCount()
     self.__NeuronsLastOutput.clear()
 
@@ -182,15 +152,17 @@ class NeuralNetwork:
     for i in self.GetAllNeurons(): NeuronsLoss[i] = None
 
     #Calculate Signal error Sk for output neuron (k index of output neuron)
-    for k in self.GetAllOutputNeurons: NeuronsLoss[k] = LossValueVector[k] * k.CalculateGradientActivationFunction()
+    for k in enumerate(self.GetAllOutputNeurons()): NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateGradientActivationFunction()
     
     #Index using for control list of neurons to still update
     i = 0
     
     #FIRST STEP: assign for each neuron (input, hidden and output) own signal error
-    
+
     #For each neuron to still update
     while(len(NeuronsToUpdate) > 0):
+      
+      i %= len(NeuronsToUpdate)
 
       ActualNeuron = NeuronsToUpdate[i]   #Choose neuron to analyze
       
@@ -198,8 +170,8 @@ class NeuralNetwork:
       Bridges = ActualNeuron.GetSetExitBridge()
       
       #If actual neuron can't get own signal error
-      if(None in list(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges)):
-        i = (i+1) % len(NeuronsToUpdate)
+      if(None in list(map(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges))):
+        i += 1 
         continue
       
       #Calculate Signal error Sj for hidden and input neuron (Actual neuron = neuron j, w is bridge to consider)
@@ -207,6 +179,7 @@ class NeuralNetwork:
       
       NeuronsLoss[ActualNeuron] = SignalError
       
+      for w in Bridges: w.ResetUsedCount()
       del NeuronsToUpdate[i]
       
     #SECOND STEP: update bias and weights of bridges
@@ -221,9 +194,20 @@ class NeuralNetwork:
     
       #Update weights
       WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron])
-      for Weight in enumerate(Neuron.GetSetEnterBridges()): Weight[1].Weight = WeightsNewValue[0]
+      for Weight in enumerate(Neuron.GetSetEnterBridge()): Weight[1].Weight = WeightsNewValue[0]
 
-
+  def SetLossFunctionEvaluation(self, Function):
+    CheckParametersFunction(Function, 2)
+    self.__LambdaLossFunctionEvaluation = Function
+    self.__GradientLossFunction = DerivationLambda(Function, 0)
+    
+  def SetBeforeLossFunctionEvaluation(self, Function):
+    CheckParametersFunction(Function, 2)
+    self.__BeforeLambdaLossFunctionEvaluation = Function
+    
+  def SetBeforeGradientLoss(self, Function):
+    CheckParametersFunction(Function, 2)
+    self.__BeforeGradientLossFunction = Function
 
   def LossFunctionEvaluation(self, OutputCalculatedVector: np.ndarray, OutputTargetVector: np.ndarray):
 
@@ -236,12 +220,10 @@ class NeuralNetwork:
 
     if(len(OutputCalculatedVector) != len(OutputTargetVector)): raise ValueError(f"There are different values between calculated output {len(OutputCalculatedVector)} and {len(OutputTargetVector)}")
 
-    return sum(map(lambda x, y: self.__LambdaLossFunctionEvaluation(x, y), OutputCalculatedVector, OutputTargetVector)) / len(OutputCalculatedVector)
-
+    return sum(map(lambda x, y: self.__LambdaLossFunctionEvaluation(*self.__BeforeLambdaLossFunctionEvaluation(x, y)), OutputCalculatedVector, OutputTargetVector)) / len(OutputCalculatedVector)
 
   def GradientDirectionLoss(self, OutputCalculated, OutputTarget):
-    return self.__GradientLossFunction(OutputCalculated, OutputTarget)
-
+    return self.__GradientLossFunction(*self.__BeforeGradientLossFunction(OutputCalculated, OutputTarget))
 
   #NeuralNetwork State
   class NeuralNetworkState:
@@ -292,12 +274,8 @@ class NeuralNetwork:
     Biases = State.GetBiases()
 
     for i in range(len(self.__AllBridges)): self.__AllBridges[i].Weight = Weights[i]
-    for i in range(len(self.__AllNeurons)): self.__AllNeurons[i].BiasValue = Biases[i]
+    for i in enumerate(self.GetAllNeurons()): i[1].BiasValue = Biases[i[0]]
     
 class MLP(NeuralNetwork):
   def __init__(self, InputNumber: int, OutputNumber: int, LossLambdaFunctionEvaluation: LambdaType):
     super().__init__(InputNumber, OutputNumber, LossLambdaFunctionEvaluation)
-    
-    
-    
-

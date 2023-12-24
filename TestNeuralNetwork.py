@@ -27,7 +27,7 @@ BridgeCounts = list(map(lambda i: i.GetUsedCount(), NN1.GetAllBridges()))
 assert min(BridgeCounts) == max(BridgeCounts)
 assert min(BridgeCounts) == 1
 
-NN1.Learn(1)
+NN1.Learn([1])
 
 BridgeCounts = list(map(lambda i: i.GetUsedCount(), NN1.GetAllBridges()))
 

@@ -16,6 +16,12 @@ class Layer:
 
   def GetNeurons(self):
     return list(self.__Neurons)
+  
+  def InsertNeuron(self, Neuron, i):
+    self.__Neurons.insert(i, Neuron)
+    
+  def RemoveNeuron(self, i):
+    del self.__Neurons[i]
 
   def ConnectTo(self, layer):
     for i in self.__Neurons:
