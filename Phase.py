@@ -34,7 +34,7 @@ class TrainPhase(Phase):
         OutputValue=self._Model.Predict(InputVector)
         DirectionLoss = self._Model.GradientDirectionLoss(OutputValue,TargetValue)
         self._Model.Learn(DirectionLoss)
-        LossValue += self._Model.GetLossLambdaFunctionEvaluation()(OutputValue, TargetValue)
+        LossValue += self._Model.LossFunctionEvaluation(OutputValue, TargetValue)
       LossValue/=len(Batch)
       TotalLossValue+=LossValue
     self._Metrics["Loss"].append(TotalLossValue/len(Batches))   
@@ -51,7 +51,7 @@ class EvaluationPhase(Phase):
 
     for Batch in Batches:
       LossValue = 0
-      for r in Batch: LossValue += self._Model.GetLossLambdaFunctionEvaluation()(self._Model.Predict(r[0]), r[1])
+      for r in Batch: LossValue += self._Model.LossFunctionEvaluation(self._Model.Predict(r[0]), r[1])
     self._Metrics["Loss"].append(LossValue / len(Batches))
 
       #Add loss value batch to total loss value

@@ -78,26 +78,21 @@ def KFoldGraph(MetricsData: dict, Colors, LabelX, Title):
 
 
 #istance desired model
-LossFunction= lambda yo, yt: (1/2) * (yo-yt)*(yo-yt)
 Model=BuildTwoLevelFeedForward(10,5,3,lambda op,tp:(op-tp)**(1/2),lambda x,y:0)
-def BeforeLossFunction(output,target):
-  output_value=sp.matrices.Matrix(list(map(lambda o:[o],output)))
-  target_value=sp.matrices.Matrix(list(map(lambda t:[t],target)))
-  return output_value,target_value
 
 Neurons=Model.GetAllInputNeurons()+Model.GetAllHiddenNeurons()+Model.GetAllOutputNeurons()
 for n in Neurons:
-  n.SetBeforeLossFunction(lambda op,tp: (op[0]-tp[0])**2-(op[1]-tp[1])**2-(op[2]-tp[2])**2)
+  n.SetBeforeLossFunction(lambda op,tp: ((op[0]-tp[0])**2+(op[1]-tp[1])**2+(op[2]-tp[2])**2,0))
 
 
 
 #load dataset
-Data=TakeDataset('FilesData/ML-CUP23-TR.csv')
+Data=TakeDataset('FilesData/ML-CUP23-TR.csv')[:60]
 
 #set hyperparamters values
 LearningRate=np.linspace(0.1,0.9,10)
 WeightDecay=np.linspace(0,2,10)# a.k.a. Lambda in Tikohonv regularization
-FoldsNumber= [6]
+FoldsNumber= [3]
 BatchDimension= [10]#TODO: cambiare con percentuale fra 0 ed 1
 threshold= np.linspace(0.1,0.9,10)
 
@@ -105,7 +100,7 @@ threshold= np.linspace(0.1,0.9,10)
 ParameterGrid=list(it.product(LearningRate,WeightDecay,FoldsNumber,BatchDimension))
 
 print(f"performing grid search on {len(ParameterGrid[0])} hyperparamters with {len(ParameterGrid)} combinations")
-print(f"using a data set with {len(Data)} with {len(Data[0][0])} input features and {len(Data[0][1])}")
+print(f"using a data set with {len(Data)} examples, {len(Data[0][0])} input features and {len(Data[0][1])}")
 #grid search
 BestModelIndex=-1
 BestModelError=float('inf')
@@ -116,8 +111,8 @@ for hyperparameters in ParameterGrid:
                                             WeightDecay=hyperparameters[1],
                                             FoldsNumber=hyperparameters[2],
                                             BatchDimension=hyperparameters[3])
-  ValidationError=0
-  FoldsPerformance=list(map(lambda fold:fold[-1],ModelPerformance["validation"]))
+  ValidationError=0 
+  FoldsPerformance=list(map(lambda fold:fold["Loss"][-1],ModelPerformance["validation"]))
   ValidationError=sum(FoldsPerformance)/len(FoldsPerformance)
   if ValidationError < BestModelError:
     BestModelError=ValidationError

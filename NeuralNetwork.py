@@ -211,13 +211,14 @@ class NeuralNetwork:
 
   def LossFunctionEvaluation(self, OutputCalculatedVector: np.ndarray, OutputTargetVector: np.ndarray):
 
-    #Check all requirements of 2 list of vector
-    for i in OutputCalculatedVector:
+    #Check all requirements of 2 list of vecto
+    
+    """ for i in OutputCalculatedVector:
       if((len(i) != len(self.__OutputNeuronVector))): raise ValueError(f"Output calculated vector must be {len(self.__OutputNeuronVector)}, but is {len(i)}")
 
     for i in OutputTargetVector:
       if(len(i) != len(self.__OutputNeuronVector)): raise ValueError(f"Output target vector must be {len(self.__OutputNeuronVector)}, but is {len(i)}")
-
+ """
     if(len(OutputCalculatedVector) != len(OutputTargetVector)): raise ValueError(f"There are different values between calculated output {len(OutputCalculatedVector)} and {len(OutputTargetVector)}")
 
     return sum(map(lambda x, y: self.__LambdaLossFunctionEvaluation(*self.__BeforeLambdaLossFunctionEvaluation(x, y)), OutputCalculatedVector, OutputTargetVector)) / len(OutputCalculatedVector)
