@@ -1,10 +1,12 @@
 import numpy as np
 
+#Talke data from dataset file
 def TakeDataset(path):
   Data = np.genfromtxt(path, delimiter=',', skip_header = 7,dtype=np.float64)[:, 1:]
   Result = [[i[:-3], i[-3:]] for i in Data]
   return Result
 
+#Extract batches from Training dataset
 def BatchesExtraction(TR, n, TakeResidue = True):
   Result = []
   for i in range(0, len(TR), n): Result.append(TR[i: i+n])

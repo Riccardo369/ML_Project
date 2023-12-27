@@ -93,17 +93,28 @@ class NeuralNetwork:
     self.Clear() #Clear data of count bridge and vectore neuron input
 
     NeuronsToActive = []
+    
+    #for w in self.__InputNeuronVector:
+      #for i in w.GetSetEnterBridge():
+        #print(print(f"{i.GetStartNeuron().__class__.__name__} {i} {i.GetFinishNeuron().__class__.__name__}"))
+    
+    #for i in self.__AllBridges:
+      #print(f"{i.GetStartNeuron().__class__.__name__} {i} {i.GetFinishNeuron().__class__.__name__}")
 
     #Load input data and Load neuron to active
     for i in range(len(self.__InputNeuronVector)):
 
       BridgeToStart = self.__InputNeuronVector[i].GetEnterBridgeFromNeuron(None)
+      
+      #print(f"Deve essere 1 {BridgeToStart.Weight}")
       BridgeToStart.ResetUsedCount()
       BridgeToStart.IncrementUsedCount()
 
       self.__InputNeuronVector[i].LoadInputFromBridge(BridgeToStart, InputVector[i])
 
       NeuronsToActive.append(self.__InputNeuronVector[i])
+      
+    #for i in self.__InputNeuronVector: print(i.GetInputVector())
 
     Result = [None for i in self.__OutputNeuronVector]
 
@@ -131,7 +142,7 @@ class NeuralNetwork:
       for b in ActualNeuron.GetSetExitBridge():
 
         if(b.GetFinishNeuron() not in NeuronsToActive): NeuronsToActive.append(b.GetFinishNeuron())       #Next neuron is added to list
-
+        
         b.GetFinishNeuron().LoadInputFromBridge(b, Value)                                                 #Value is spread to new neuron
         b.IncrementUsedCount()                                                                            #Updates Bridge's counter
 
@@ -152,7 +163,11 @@ class NeuralNetwork:
     for i in self.GetAllNeurons(): NeuronsLoss[i] = None
 
     #Calculate Signal error Sk for output neuron (k index of output neuron)
-    for k in enumerate(self.GetAllOutputNeurons()): NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateGradientActivationFunction()
+    for k in enumerate(self.GetAllOutputNeurons()):
+      #print(f"Calculate gradient activation function {k[1].CalculateGradientActivationFunction()}")
+      #print(f"Loss value vector {k} {LossValueVector[k[0]]}")
+      
+      NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateGradientActivationFunction()
     
     #Index using for control list of neurons to still update
     i = 0
@@ -177,6 +192,8 @@ class NeuralNetwork:
       #Calculate Signal error Sj for hidden and input neuron (Actual neuron = neuron j, w is bridge to consider)
       SignalError = sum(list(map(lambda w: w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges))) * ActualNeuron.CalculateGradientActivationFunction() 
       
+      #print("")
+      #print(f"{SignalError} {list(map(lambda w: w.Weight, Bridges))} {list(map(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges))}")
       NeuronsLoss[ActualNeuron] = SignalError
       
       for w in Bridges: w.ResetUsedCount()
@@ -185,13 +202,18 @@ class NeuralNetwork:
     #SECOND STEP: update bias and weights of bridges
     
     #Extract all neurons to update
-    NeuronsToUpdate = self.GetAllHiddenNeurons() + self.GetAllOutputNeurons()
+    NeuronsToUpdate = self.GetAllNeurons()
+   
    
     for Neuron in NeuronsToUpdate:
         
       #Update bias
       Neuron.BiasValue = Neuron.CalculateUpdateBias(NeuronsLoss[Neuron]) 
-    
+      
+      #if(isinstance(Neuron, InputNeuron)):
+        #print("Input neuron update weights")
+        #print(f"{NeuronsLoss[Neuron]} --> {Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron])}")
+      
       #Update weights
       WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron])
       for Weight in enumerate(Neuron.GetSetEnterBridge()): Weight[1].Weight = WeightsNewValue[0]
@@ -200,6 +222,10 @@ class NeuralNetwork:
     CheckParametersFunction(Function, 2)
     self.__LambdaLossFunctionEvaluation = Function
     self.__GradientLossFunction = DerivationLambda(Function, 0)
+    
+  def SetGradientLossFunction(self, Function):
+    CheckParametersFunction(Function, 2)
+    self.__GradientLossFunction = Function
     
   def SetBeforeLossFunctionEvaluation(self, Function):
     CheckParametersFunction(Function, 2)
@@ -211,20 +237,27 @@ class NeuralNetwork:
 
   def LossFunctionEvaluation(self, OutputCalculatedVector: np.ndarray, OutputTargetVector: np.ndarray):
 
-    #Check all requirements of 2 list of vecto
-    
-    """ for i in OutputCalculatedVector:
-      if((len(i) != len(self.__OutputNeuronVector))): raise ValueError(f"Output calculated vector must be {len(self.__OutputNeuronVector)}, but is {len(i)}")
-
-    for i in OutputTargetVector:
-      if(len(i) != len(self.__OutputNeuronVector)): raise ValueError(f"Output target vector must be {len(self.__OutputNeuronVector)}, but is {len(i)}")
- """
+    #Check all requirements of 2 vectors
+    if(len(OutputCalculatedVector[0]) != len(self.__OutputNeuronVector)): raise ValueError(f"Output calculated vector must be {len(self.__OutputNeuronVector)}, but is {len(OutputCalculatedVector)}")
+    if(len(OutputTargetVector[0]) != len(self.__OutputNeuronVector)): raise ValueError(f"Output target vector must be {len(self.__OutputNeuronVector)}, but is {len(OutputTargetVector)}")
     if(len(OutputCalculatedVector) != len(OutputTargetVector)): raise ValueError(f"There are different values between calculated output {len(OutputCalculatedVector)} and {len(OutputTargetVector)}")
-
-    return sum(map(lambda x, y: self.__LambdaLossFunctionEvaluation(*self.__BeforeLambdaLossFunctionEvaluation(x, y)), OutputCalculatedVector, OutputTargetVector)) / len(OutputCalculatedVector)
+    
+    return np.float64(sum(map(lambda x, y: self.__LambdaLossFunctionEvaluation(*self.__BeforeLambdaLossFunctionEvaluation(x, y)), OutputCalculatedVector, OutputTargetVector)) / len(OutputCalculatedVector))
 
   def GradientDirectionLoss(self, OutputCalculated, OutputTarget):
-    return self.__GradientLossFunction(*self.__BeforeGradientLossFunction(OutputCalculated, OutputTarget))
+    
+    #import time
+    
+    #print(OutputCalculated, OutputTarget)
+    OutputCalculated, OutputTarget = self.__BeforeGradientLossFunction(OutputCalculated, OutputTarget)
+    #print(OutputCalculated, OutputTarget)
+    Result = np.float64(self.__GradientLossFunction(OutputCalculated, OutputTarget))
+    #print(Result)
+    #print("")
+    
+    #time.sleep(0.5)
+    
+    return Result
 
   #NeuralNetwork State
   class NeuralNetworkState:

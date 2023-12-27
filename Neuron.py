@@ -17,8 +17,8 @@ class Neuron:
 
     self.__ActivedState = True
 
-    if(len(args) > 0): self.BiasValue = args[0]                         #Se la nostra bias è già scelta
-    else: self.BiasValue = random.randint(-10000, 10000) / 1000         #Valore scelto per convenienza da -10 ad 10 ma si può cambiare il range volendo
+    if(len(args) > 0): self.BiasValue = np.float64(args[0])                        #Se la nostra bias è già scelta
+    else: self.BiasValue = np.float64(random.randint(-10000, 10000) / 1000)        #Valore scelto per convenienza da -10 ad 10 ma si può cambiare il range volendo
 
     self.__UpdateWeightsFunction = UpdateWeightsFunction
     self.__BeforeUpdateWeightsFunction = lambda x: x
@@ -34,19 +34,19 @@ class Neuron:
 
   def CalculateUpdatedWeights(self, LossGradientValue):
     LossGradientValue = self.__BeforeUpdateWeightsFunction(LossGradientValue)
-    return self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue)
+    return np.float64(self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue))
 
   def CalculateUpdateBias(self, LossGradientValue):
     LossGradientValue = self.__BeforeUpdateBiasFunction(LossGradientValue)
-    return self.__UpdateBiasFunction(self.BiasValue, LossGradientValue)
+    return np.float64(self.__UpdateBiasFunction(self.BiasValue, LossGradientValue))
 
   def CalculateLoss(self, CalculatedOutput, TargetOutput):
     CalculatedOutput, TargetOutput = self.__BeforeLossFunction(CalculatedOutput, TargetOutput)
-    return self.__LossFunction(CalculatedOutput, TargetOutput)
+    return np.float64(self.__LossFunction(CalculatedOutput, TargetOutput))
 
   def CalculateDerivationLoss(self, CalculatedOutput, TargetOutput):
     CalculatedOutput, TargetOutput = self.__BeforeGradientLossFunction(CalculatedOutput, TargetOutput)
-    return self.__GradientLossFunction(CalculatedOutput, TargetOutput)
+    return np.float64(self.__GradientLossFunction(CalculatedOutput, TargetOutput))
 
   def SetUpdateWeightsFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
@@ -60,6 +60,10 @@ class Neuron:
     CheckParametersFunction(Function, 2)
     self.__LossFunction = Function
     self.__GradientLossFunction = DerivationLambda(Function, 0)
+  
+  def SetGradientLossFunction(self, Function):
+    CheckParametersFunction(Function, 2)
+    self.__GradientLossFunction = Function
      
   def SetBeforeUpdateWeightsFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 1)
