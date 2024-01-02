@@ -28,7 +28,7 @@ class TrainPhase(Phase):
     TotalLossValue = 0
 
     for Batch in Batches:
-      DirectionLoss = np.array([0]*len(Batch[0][1]), dtype=np.float64)
+      DirectionLoss = np.array([0]*len(Batch[0][1]), dtype=np.longdouble)
       
       #print(f"Start direction loss {DirectionLoss}")
       
@@ -39,15 +39,10 @@ class TrainPhase(Phase):
         
         InputVector = r[0]
         TargetValue = r[1]
-        
+
+
         OutputValue = self._Model.Predict(InputVector)
-        
-        for i in OutputValue:
-          if(np.isnan(i)): raise ValueError("FERMATEEEEEE")
-        
         NewDirectionLoss = self._Model.GradientDirectionLoss(OutputValue, TargetValue)
-        
-        #print(f"New direction loss {NewDirectionLoss}")
         
         DirectionLoss += NewDirectionLoss
         
@@ -75,7 +70,9 @@ class EvaluationPhase(Phase):
       TargetValueVector = []
       
       for r in Batch:
-        OutputValueVector.append(self._Model.Predict(r[0]))
-        TargetValueVector.append(r[1])
+        Output=self._Model.Predict(r[0])
+        Target=r[1]
+        OutputValueVector.append(Output)
+        TargetValueVector.append(Target)
         
     self._Metrics["Loss"].append(self._Model.LossFunctionEvaluation(OutputValueVector, TargetValueVector))

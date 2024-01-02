@@ -60,6 +60,8 @@ class Layer:
 class PerceptronLayer(Layer):
   def __init__(self, Number, *args):
     super().__init__(Perceptron, Number, *args)
+
+
     
 class InputLayer(Layer):
   def __init__(self, Number, *args):
