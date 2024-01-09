@@ -42,6 +42,7 @@ class TrainPhase(Phase):
 
 
         OutputValue = self._Model.Predict(InputVector)
+        
         NewDirectionLoss = self._Model.GradientDirectionLoss(OutputValue, TargetValue)
         
         DirectionLoss += NewDirectionLoss
@@ -54,13 +55,15 @@ class TrainPhase(Phase):
       self._Model.Learn(DirectionLoss/len(Batch))
       TotalLossValue += self._Model.LossFunctionEvaluation(OutputValueVector, TargetValueVector)
       
+      #print(self._Model.LossFunctionEvaluation(OutputValueVector, TargetValueVector))
+      
     self._Metrics["Loss"].append(TotalLossValue/len(Batches))   
     
 class EvaluationPhase(Phase):
   def __init__(self, Model, DataSet):
     super().__init__(Model, DataSet)
 
-  def Work(self,BatchDimension):
+  def Work(self, BatchDimension):
 
     Batches = BatchesExtraction(self._Dataset, BatchDimension)
 

@@ -98,7 +98,6 @@ class Neuron:
     self._InputVector = [None for i in range(len(self._InputVector))]
 
   def LoadInputFromBridge(self, b, x):
-    assert np.isfinite(b.Weight)
     EnterBridgeList = self.GetSetEnterBridge()
     SelectedBridge = None
 
@@ -134,11 +133,11 @@ class Neuron:
     return True
 
   def GetEnterBridgeFromNeuron(self, StartNeuron):
-    try: return self._Bridges[self._Bridges.index(Bridge.Bridge(StartNeuron, self))]
+    try: return list(filter(lambda x: x.GetStartNeuron() == StartNeuron and x.GetFinishNeuron() == self, self._Bridges))[0]
     except: return None
 
   def GetExitBridgeToNeuron(self, FinalNeuron):
-    try: return self._Bridges[self._Bridges.index(Bridge.Bridge(self, FinalNeuron))]
+    try: return list(filter(lambda x: x.GetStartNeuron() == self and x.GetFinishNeuron() == FinalNeuron, self._Bridges))[0]
     except: return None
 
   def GetSetEnterBridge(self):

@@ -18,17 +18,17 @@ from Regularization import *
 from Result import *
 
 #Build the model
-def BuildTwoLevelFeedForward(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0):
+def BuildTwoLevelFeedForward(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction, Threshold = 0):
   
-  mlp = MLP(0,0,LossFunction)
+  mlp = NeuralNetwork(InputSize, OutputSize, LossFunction)
+  #mlp = NeuralNetwork(0, 0, LossFunction)
+  
   InputLayer = mlp.GetInputLayer()  
-  for i in range(InputSize):
-    InputLayer.InsertNeuron(Perceptron(Threshold,WeightsUpdateFunction,lambda x,y:0,LossFunction),i)
-  for i in InputLayer: i.AddBridge(Bridge.Bridge(None, i, 1))
+  #for i in range(InputSize): InputLayer.InsertNeuron(Perceptron(Threshold, WeightsUpdateFunction, lambda x,y:0, LossFunction), i)
+  #for i in InputLayer: i.AddBridge(Bridge.Bridge(None, i, 1))
 
   OutputLayer = mlp.GetOutputLayer()  
-  for i in range(OutputSize):
-    OutputLayer.InsertNeuron(Perceptron(Threshold,WeightsUpdateFunction,lambda x,y:0,LossFunction),i)
+  #for i in range(OutputSize): OutputLayer.InsertNeuron(Perceptron(Threshold, WeightsUpdateFunction, lambda x,y:0, LossFunction), i)
     
   HiddenLayer = Layer(Perceptron, HiddenSize, Threshold, WeightsUpdateFunction, lambda x, y: 0, lambda x, y: 0)
   
@@ -85,19 +85,16 @@ def KFoldGraph(MetricsData: dict, Colors, LabelX, Title):
   plt.show()
 
 #instance desired model
-Model=BuildTwoLevelFeedForward(10, 5, 3, lambda op, tp: (op-tp)**2, lambda x, y: 0)
+Model=BuildTwoLevelFeedForward(10, 10, 3, lambda op, tp: (op-tp)**(1/2), lambda x, y: 0)
 Model.SetBeforeLossFunctionEvaluation(lambda op, tp: (((op[0]-tp[0])**2)+((op[1]-tp[1])**2)+((op[2]-tp[2])**2), 0))
 
 #load dataset
 Data=TakeDataset('FilesData/ML-CUP23-TR.csv')[:200]
 
-
-
-
 #set hyperparamters values
-LearningRate=np.linspace(0.1,0.9,10)
-WeightDecay=np.linspace(0.1,2,10)# a.k.a. Lambda in Tikohonv regularization
-Threshold= np.linspace(0.1,0.9,10)
+LearningRate=np.linspace(0.1,0.9, 1)
+WeightDecay=np.linspace(0.1,2, 1)# a.k.a. Lambda in Tikohonv regularization
+Threshold= np.linspace(0.1,0.9, 1)
 FoldsNumber= [4]
 
 #grid creation
@@ -110,7 +107,13 @@ BestModelIndex=-1
 BestModelError=np.inf
 BestModelParameters=None
 BestModelPerformance=None
+
+InitialState = Model.ExtractLearningState()
+
 for i,hyperparameters in enumerate(ParameterGrid):
+  
+  Model.LoadLearningState(InitialState)
+  
   ModelPerformance=ModelSelection(Model,
                                   Data,
                                   LearningRate=hyperparameters[0],
