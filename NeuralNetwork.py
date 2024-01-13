@@ -146,7 +146,7 @@ class NeuralNetwork:
     if(len(LossValueVector) != len(self.__OutputNeuronVector)): raise ValueError(f"{len(self.__OutputNeuronVector)} Output neurons but {len(LossValueVector)} loss values insert")
     
     #Save which neurons must be still updated
-    NeuronsToUpdate = self.GetAllInputNeurons() + self.GetAllHiddenNeurons()
+    NeuronsToUpdate = self.GetAllHiddenNeurons() + self.GetAllInputNeurons()
 
     #Save all loss values of all neurons
     NeuronsLoss = dict()
@@ -182,13 +182,13 @@ class NeuralNetwork:
       NeuronsLoss[ActualNeuron] = SignalError
       
       for w in Bridges: w.ResetUsedCount()
+      # remove neuron from the list
       del NeuronsToUpdate[i]
       
     #SECOND STEP: update bias and weights of bridges
     
     #Extract all neurons to update
     for Neuron in self.GetAllNeurons():
-        
       #Update bias
       Neuron.BiasValue = Neuron.CalculateUpdateBias(NeuronsLoss[Neuron]) 
  

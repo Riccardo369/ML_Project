@@ -17,8 +17,8 @@ def Graph(MetricsData: dict, Colors, LabelX, Title):
   plt.xlabel(LabelX)
   plt.ylabel('Percentual')
 
-  if(max(map(lambda i: max(MetricsData[i]), MetricsData.keys())) <= 100):
-    plt.ylim([0, 100])
+  """ if(max(map(lambda i: max(MetricsData[i]), MetricsData.keys())) <= 100):
+    plt.ylim([0, 100]) """
 
   plt.legend()
   plt.show()

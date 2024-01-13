@@ -25,10 +25,6 @@ from model_selection import ModelSelection, make_grid
 
 
 #instance desired model
-
-""" Model=BuildTwoLevelFeedForward(17, 4, 1, lambda op, tp: (op-tp)**2, lambda x, y: 0)
-Model.SetBeforeLossFunctionEvaluation(lambda op, tp: (((op[0]-tp[0])**2)+((op[1]-tp[1])**2)+((op[2]-tp[2])**2), 0))
- """
 #load dataset
 #Data=TakeDataset('FilesData/ML-CUP23-TR.csv')[:200]
 
@@ -46,7 +42,6 @@ monk_features={
   "class":[0,1]
 }
 
-
 monk_encoding=dict()
 
 for k,v in monk_features.items():
@@ -55,7 +50,7 @@ for k,v in monk_features.items():
 Data=convert_to_one_hot(["a1","a2","a3","a4","a5","a6"],monk_encoding,monk1_tr)
 
 #set hyperparamters values
-LearningRate=np.linspace(0.1,0.5,3)
+LearningRate=np.linspace(0.01,0.1,3)
 WeightDecay=np.linspace(0,1,3)# a.k.a. Lambda in Tikohonv regularization
 FoldsNumber= np.array([2])
 
@@ -71,12 +66,12 @@ BestModelParameters=None
 BestModelPerformance=None
 
 
-InitialState = Model.ExtractLearningState()
+Model=BuildTwoLevelFeedForward(17, 4, 1, lambda op, tp: (op-tp)**2, lambda x, y: 0)
+Model.SetBeforeLossFunctionEvaluation(lambda op, tp: ( ((op[0]-tp[0])**2), 0))
+InitialState=Model.ExtractLearningState()
 
 for i,hyperparameters in enumerate(ParameterGrid):
   print(f">> training model no.{i+1} hyperparameters {hyperparameters}")
-  Model=BuildTwoLevelFeedForward(17, 4, 1, lambda op, tp: (op-tp)**2, lambda x, y: 0)
-  Model.SetBeforeLossFunctionEvaluation(lambda op, tp: ( ((op[0]-tp[0])**2), 0))
   
   Model.LoadLearningState(InitialState)
   
