@@ -22,3 +22,15 @@ def Graph(MetricsData: dict, Colors, LabelX, Title):
 
   plt.legend()
   plt.show()
+
+def KFoldGraph(MetricsData: dict, Colors, LabelX, Title):
+  XAxis= np.linspace(0, len(MetricsData["training"][0]),len(MetricsData["training"][0]))
+  fig, axs= plt.subplots(len(MetricsData),1)
+
+  fig.subtitle(f"Kfold cv with {len(MetricsData['training'])} folds")
+  for i in len(MetricsData["training"]):
+    axs[i].plot(XAxis,MetricsData["training"],linestyle='-', color = "red")
+    axs[i].plot(XAxis,MetricsData["validation"],linestyle='-', color = "blue")
+    axs[i].set_title(f'fold no. {i+1}')
+  
+  plt.show()

@@ -175,6 +175,7 @@ class NeuralNetwork:
         i += 1 
         continue
       
+      
       #Calculate Signal error Sj for hidden and input neuron (Actual neuron = neuron j, w is bridge to consider)
       SignalError = sum(list(map(lambda w: 0 if w.GetStartNeuron() == None else w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges))) * ActualNeuron.CalculateGradientActivationFunction() 
       

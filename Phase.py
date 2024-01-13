@@ -25,8 +25,7 @@ class TrainPhase(Phase):
     if(BatchDimension < 1 or BatchDimension > len(self._Dataset)): raise ValueError("batch dimension must be above 0 and lower or equal to the dataset dimension")
     Batches = BatchesExtraction(self._Dataset, BatchDimension)
 
-    TotalLossValue = 0
-
+    TotalLossValue = 0  
     for Batch in Batches:
       DirectionLoss = np.array([0]*len(Batch[0][1]), dtype=np.longdouble)
       
@@ -49,10 +48,13 @@ class TrainPhase(Phase):
         
         OutputValueVector.append(OutputValue)
         TargetValueVector.append(TargetValue)
-        
+      
       #print(DirectionLoss/len(Batch))
-              
+
+
       self._Model.Learn(DirectionLoss/len(Batch))
+
+
       TotalLossValue += self._Model.LossFunctionEvaluation(OutputValueVector, TargetValueVector)
       
       #print(self._Model.LossFunctionEvaluation(OutputValueVector, TargetValueVector))
