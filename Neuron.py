@@ -3,12 +3,13 @@ import random
 import math
 from BasedTools import *
 import Bridge
+
 #Responsabilità, rappresentare un neurone tenendo conto degl' archi di uscita, di entrata e della bias, in più calcolare la propria funzione di attivazione
 class Neuron:
 
   def __init__(self, UpdateWeightsFunction: LambdaType, BiasUpdateFunction: LambdaType, LossFunction: LambdaType, *args):
 
-    CheckParametersFunction(UpdateWeightsFunction, 2)
+    CheckParametersFunction(UpdateWeightsFunction, 3)
     CheckParametersFunction(BiasUpdateFunction, 2)
     CheckParametersFunction(LossFunction, 2)
 
@@ -21,21 +22,22 @@ class Neuron:
     else: self.BiasValue = np.longdouble(random.randint(-10000, 10000) / 1000)        #Valore scelto per convenienza da -10 ad 10 ma si può cambiare il range volendo
 
     self.__UpdateWeightsFunction = UpdateWeightsFunction
-    self.__BeforeUpdateWeightsFunction = lambda x: x
+    self.__BeforeUpdateWeightsFunction = lambda x, y: (x, y)
 
     self.__UpdateBiasFunction = BiasUpdateFunction
     self.__BeforeUpdateBiasFunction = lambda x: x
 
     self.__LossFunction = LossFunction
     self.__BeforeLossFunction = lambda x, y: (x, y)
-
-    self.__GradientLossFunction = DerivationLambda(self.__LossFunction, 0)
+    
+    try:  self._GradientLossFunction = DerivationLambda(self.__LossFunction, 0)
+    except: self._GradientLossFunction = lambda x, y: 1
+    
     self.__BeforeGradientLossFunction = lambda x, y: (x, y)
 
-
-  def CalculateUpdatedWeights(self, LossGradientValue,NeuronsOutput):
-    LossGradientValue = self.__BeforeUpdateWeightsFunction(LossGradientValue)
-    return np.longdouble(self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue,NeuronsOutput))
+  def CalculateUpdatedWeights(self, LossGradientValue, NeuronOutputs):
+    LossGradientValue, NeuronOutputs = self.__BeforeUpdateWeightsFunction(LossGradientValue, NeuronOutputs)
+    return np.longdouble(self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue, NeuronOutputs))
 
   def CalculateUpdateBias(self, LossGradientValue):
     LossGradientValue = self.__BeforeUpdateBiasFunction(LossGradientValue)
@@ -47,7 +49,7 @@ class Neuron:
 
   def CalculateDerivationLoss(self, CalculatedOutput, TargetOutput):
     CalculatedOutput, TargetOutput = self.__BeforeGradientLossFunction(CalculatedOutput, TargetOutput)
-    return np.longdouble(self.__GradientLossFunction(CalculatedOutput, TargetOutput))
+    return np.longdouble(self._GradientLossFunction(CalculatedOutput, TargetOutput))
 
   def SetUpdateWeightsFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 3)
@@ -60,14 +62,14 @@ class Neuron:
   def SetLossFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
     self.__LossFunction = Function
-    self.__GradientLossFunction = DerivationLambda(Function, 0)
+    self._GradientLossFunction = DerivationLambda(Function, 0)
   
   def SetGradientLossFunction(self, Function):
     CheckParametersFunction(Function, 2)
-    self.__GradientLossFunction = Function
+    self._GradientLossFunction = Function
      
   def SetBeforeUpdateWeightsFunction(self, Function: LambdaType):
-    CheckParametersFunction(Function, 1)
+    CheckParametersFunction(Function, 2)
     self.__BeforeUpdateWeightsFunction = Function
 
   def SetBeforeUpdateBiasFunction(self, Function: LambdaType):
@@ -166,21 +168,18 @@ class ActivationNeuron(Neuron):
 
     CheckParametersFunction(ActivationFunction, 1)
     self.__ActivationFunction = ActivationFunction
-
-    try:
-      self.__GradientActivationFunction = DerivationLambda(ActivationFunction, 0)
-      print("derivation function")
-      self.__GradientActivationFunction(0)
-    except Exception as e:
-      self.__GradientActivationFunction = lambda x: 1
-  def SetActivationFunction(self,Function):
+      
+  def SetActivationFunction(self, Function):
     CheckParametersFunction(Function, 1)
     self.__ActivationFunction = Function
-  def CalculateGradientActivationFunction(self):
-    return self.__GradientActivationFunction(sum(self._InputVector) + self.BiasValue)
-  def SetGradientActivationFunction(self,ActivationFunction):
-    CheckParametersFunction(ActivationFunction, 1)
-    self.__GradientActivationFunction=ActivationFunction
+    
+  def CalculateDerivationLoss(self):
+    return self._GradientLossFunction(sum(self._InputVector) + self.BiasValue)
+  
+  def SetDerivationLoss(self, DerivationFunction):
+    CheckParametersFunction(DerivationFunction, 1)
+    self._GradientLossFunction = DerivationFunction
+    
   def Calculate(self):
     if(not self.GetStateActived()): return 0
 
@@ -198,7 +197,7 @@ class OutputNeuron(ActivationNeuron):
 class Perceptron(ActivationNeuron):
   def __init__(self, threshold, UpdateWeightsFunction: LambdaType, BiasUpdateFunction: LambdaType, LossFunction: LambdaType, *args):
     self.__Threshold = threshold
-    super().__init__(lambda x: x if x>self.__Threshold else 0, UpdateWeightsFunction, BiasUpdateFunction, LossFunction, *args)
+    super().__init__(lambda x: x if x >= self.__Threshold else 0, UpdateWeightsFunction, BiasUpdateFunction, LossFunction, *args)
 
   def GetThreshold(self):
     return self.__Threshold

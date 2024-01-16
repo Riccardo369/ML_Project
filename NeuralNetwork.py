@@ -153,7 +153,7 @@ class NeuralNetwork:
 
     #Calculate Signal error Sk for output neuron (k index of output neuron)
     for k in enumerate(self.GetAllOutputNeurons()): 
-      NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateGradientActivationFunction()
+      NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateDerivationLoss()
     
     
     NeuronsToUpdate = self.GetAllHiddenNeurons()# + self.GetAllInputNeurons()
@@ -176,9 +176,8 @@ class NeuralNetwork:
         i += 1 
         continue
       
-      
       #Calculate Signal error Sj for hidden and input neuron (Actual neuron = neuron j, w is bridge to consider)
-      SignalError = sum(list(map(lambda w: 0 if w.GetStartNeuron() == None else w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges))) * ActualNeuron.CalculateGradientActivationFunction() 
+      SignalError = sum(list(map(lambda w: 0 if w.GetStartNeuron() == None else w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges))) * ActualNeuron.CalculateDerivationLoss() 
       
       NeuronsLoss[ActualNeuron] = SignalError
       
@@ -188,15 +187,16 @@ class NeuralNetwork:
     
     #Extract all neurons to update
     for Neuron in self.GetAllOutputNeurons()+self.GetAllHiddenNeurons():
-      if any(map(lambda x:x.GetStartNeuron()==None, Neuron.GetSetEnterBridge())):
+      if any(map(lambda x: x.GetStartNeuron() == None, Neuron.GetSetEnterBridge())):
         continue
+      
       #Update bias
       Neuron.BiasValue = Neuron.CalculateUpdateBias(NeuronsLoss[Neuron]) 
 
-      EnterNeuronsOutput= map(lambda x:self.__NeuronsLastOutput[x],map(lambda x:x.GetStartNeuron(),Neuron.GetSetEnterBridge()))
+      EnterNeuronsOutput = list(map(lambda x: self.__NeuronsLastOutput[x.GetStartNeuron()], Neuron.GetSetEnterBridge()))
 
       #Update weights
-      WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron],list(EnterNeuronsOutput))
+      WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron], EnterNeuronsOutput)
       for i, Weight in enumerate(Neuron.GetSetEnterBridge()): Weight.Weight = WeightsNewValue[i]
 
   def SetLossFunctionEvaluation(self, Function):
