@@ -15,4 +15,4 @@ for i in Batches: print(i)
 
 ################################################################################################################
 
-Data = TakeDataset("FilesData//ML-CUP23-TR.csv")
+Data = TakeCupDataset("FilesData//ML-CUP23-TR.csv")

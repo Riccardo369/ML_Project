@@ -2,8 +2,7 @@ import numpy as np
 from Evaluation import CrossValidation
 from Phase import EvaluationPhase, TrainPhase
 
-
-def ModelSelection(Model, DataSet, LearningRate, WeightDecay, FoldsNumber, Threshold=0 ,Steps=50):
+def model_selection(Model, DataSet, LearningRate, WeightDecay, FoldsNumber, Threshold=0 ,Steps=50):
   print(f"beginning model selection with {Steps} steps and {FoldsNumber} folds")
   ModelSelectionPerformance=dict()
   
@@ -13,7 +12,6 @@ def ModelSelection(Model, DataSet, LearningRate, WeightDecay, FoldsNumber, Thres
   cv=CrossValidation(DataSet,FoldsNumber)
   
   def weights_update_function(weigths,GradientLoss):
-    print(GradientLoss)
     return list(map(lambda w: w +LearningRate*GradientLoss - WeightDecay*w,weigths))
   
   for i in Model.GetAllNeurons(): 
@@ -38,6 +36,3 @@ def ModelSelection(Model, DataSet, LearningRate, WeightDecay, FoldsNumber, Thres
 
   ModelSelectionPerformance["hyperparameters"]=dict()
   return ModelSelectionPerformance
-
-def make_grid(*args):
-  return np.array(np.meshgrid(*args)).T.reshape(-1, 3)

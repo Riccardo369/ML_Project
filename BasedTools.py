@@ -10,7 +10,10 @@ def CheckParametersFunction(Function, n):
 def DerivationLambda(Lambda, i):
   VariablesName = Lambda.__code__.co_varnames[:Lambda.__code__.co_argcount]
   Variables = sp.symbols(' '.join(map(str, VariablesName)))
-  Expression = sp.sympify(Lambda(*Variables))
+  if Lambda.__code__.co_argcount == 1:
+    Expression=sp.sympify(Lambda(Variables))
+  else:
+    Expression = sp.sympify(Lambda(*Variables))
   Derivate = sp.diff(Expression, VariablesName[i])
   Result = sp.lambdify(VariablesName, Derivate)
   return Result
@@ -29,3 +32,4 @@ class HyperParameter:
     
   def __call__(self):
     return self.Value
+  

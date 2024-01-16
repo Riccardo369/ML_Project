@@ -4,8 +4,7 @@ from Neuron import *
 
 class Layer:
   def __init__(self, Type: type, Number, *args):
-
-    if(Type.__init__.__code__.co_argcount-1 > len(args)):
+    if(Type.__init__.__code__.co_argcount-1 > len(args) and Number!= 0):
 
       ParametersNameList = list(Type.__init__.__code__.co_varnames)[len(args)+1:]
       ParametersNameList[-1] = "*args"

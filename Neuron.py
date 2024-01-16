@@ -33,9 +33,9 @@ class Neuron:
     self.__BeforeGradientLossFunction = lambda x, y: (x, y)
 
 
-  def CalculateUpdatedWeights(self, LossGradientValue):
+  def CalculateUpdatedWeights(self, LossGradientValue,NeuronsOutput):
     LossGradientValue = self.__BeforeUpdateWeightsFunction(LossGradientValue)
-    return np.longdouble(self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue))
+    return np.longdouble(self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue,NeuronsOutput))
 
   def CalculateUpdateBias(self, LossGradientValue):
     LossGradientValue = self.__BeforeUpdateBiasFunction(LossGradientValue)
@@ -50,7 +50,7 @@ class Neuron:
     return np.longdouble(self.__GradientLossFunction(CalculatedOutput, TargetOutput))
 
   def SetUpdateWeightsFunction(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
+    CheckParametersFunction(Function, 3)
     self.__UpdateWeightsFunction = Function
 
   def SetUpdateBiasFunction(self, Function: LambdaType):
@@ -169,14 +169,18 @@ class ActivationNeuron(Neuron):
 
     try:
       self.__GradientActivationFunction = DerivationLambda(ActivationFunction, 0)
+      print("derivation function")
       self.__GradientActivationFunction(0)
-    except:
+    except Exception as e:
       self.__GradientActivationFunction = lambda x: 1
   def SetActivationFunction(self,Function):
     CheckParametersFunction(Function, 1)
     self.__ActivationFunction = Function
   def CalculateGradientActivationFunction(self):
     return self.__GradientActivationFunction(sum(self._InputVector) + self.BiasValue)
+  def SetGradientActivationFunction(self,ActivationFunction):
+    CheckParametersFunction(ActivationFunction, 1)
+    self.__GradientActivationFunction=ActivationFunction
   def Calculate(self):
     if(not self.GetStateActived()): return 0
 
@@ -184,12 +188,12 @@ class ActivationNeuron(Neuron):
     return self.__ActivationFunction(Net)
 
 class InputNeuron(ActivationNeuron):
-  def __init__(self):
-    super().__init__(lambda x: x, lambda x, y: x, lambda x, y: 0, lambda x, y: (1/2)*((x - y)**2), 0) 
+  def __init__(self,ActivationFunction:LambdaType,UpdateWeightsFunction: LambdaType,BiasUpdateFunction:LambdaType,LossFunction:LambdaType):
+    super().__init__(ActivationFunction, UpdateWeightsFunction,BiasUpdateFunction,LossFunction, 0) 
     
 class OutputNeuron(ActivationNeuron):
-  def __init__(self, UpdateWeightsFunction: LambdaType):
-    super().__init__(lambda x: x, UpdateWeightsFunction, lambda x, y: 0, lambda x, y: (1/2)*((x - y)**2), 0)
+  def __init__(self,ActivationFunction:LambdaType,UpdateWeightsFunction: LambdaType,BiasUpdateFunction:LambdaType,LossFunction:LambdaType):
+    super().__init__(ActivationFunction, UpdateWeightsFunction,BiasUpdateFunction,LossFunction, 0)
     
 class Perceptron(ActivationNeuron):
   def __init__(self, threshold, UpdateWeightsFunction: LambdaType, BiasUpdateFunction: LambdaType, LossFunction: LambdaType, *args):

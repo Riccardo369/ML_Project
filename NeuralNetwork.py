@@ -46,7 +46,7 @@ class NeuralNetwork:
     return list(self.__HiddeNeurons)
 
   def GetAllOutputNeurons(self):
-    return self.__OutputNeuronVector.GetNeurons()
+    return list(self.__OutputNeuronVector.GetNeurons())
 
   def GetAllNeurons(self):
     return self.GetAllInputNeurons() + self.GetAllHiddenNeurons() + self.GetAllOutputNeurons()
@@ -146,18 +146,19 @@ class NeuralNetwork:
     if(len(LossValueVector) != len(self.__OutputNeuronVector)): raise ValueError(f"{len(self.__OutputNeuronVector)} Output neurons but {len(LossValueVector)} loss values insert")
     
     #Save which neurons must be still updated
-    NeuronsToUpdate = self.GetAllHiddenNeurons() + self.GetAllInputNeurons()
 
     #Save all loss values of all neurons
     NeuronsLoss = dict()
     for i in self.GetAllNeurons(): NeuronsLoss[i] = None
 
     #Calculate Signal error Sk for output neuron (k index of output neuron)
-    for k in enumerate(self.GetAllOutputNeurons()): NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateGradientActivationFunction()
+    for k in enumerate(self.GetAllOutputNeurons()): 
+      NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateGradientActivationFunction()
     
+    
+    NeuronsToUpdate = self.GetAllHiddenNeurons()# + self.GetAllInputNeurons()
     #Index using for control list of neurons to still update
     i = 0
-    
     #FIRST STEP: assign for each neuron (input and hidden) own signal error
 
     #For each neuron to still update
@@ -184,16 +185,18 @@ class NeuralNetwork:
       for w in Bridges: w.ResetUsedCount()
       # remove neuron from the list
       del NeuronsToUpdate[i]
-      
-    #SECOND STEP: update bias and weights of bridges
     
     #Extract all neurons to update
-    for Neuron in self.GetAllNeurons():
+    for Neuron in self.GetAllOutputNeurons()+self.GetAllHiddenNeurons():
+      if any(map(lambda x:x.GetStartNeuron()==None, Neuron.GetSetEnterBridge())):
+        continue
       #Update bias
       Neuron.BiasValue = Neuron.CalculateUpdateBias(NeuronsLoss[Neuron]) 
- 
+
+      EnterNeuronsOutput= map(lambda x:self.__NeuronsLastOutput[x],map(lambda x:x.GetStartNeuron(),Neuron.GetSetEnterBridge()))
+
       #Update weights
-      WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron])
+      WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron],list(EnterNeuronsOutput))
       for i, Weight in enumerate(Neuron.GetSetEnterBridge()): Weight.Weight = WeightsNewValue[i]
 
   def SetLossFunctionEvaluation(self, Function):
