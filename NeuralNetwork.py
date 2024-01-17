@@ -78,7 +78,7 @@ class NeuralNetwork:
         if(r not in CapturedBridges): CapturedBridges.append(r) #Add bridge if not still exists in list
       i += 1
 
-    self.__HiddeNeurons = CapturedNeurons
+    self.__HiddeNeurons = list(filter(lambda n: len(n.GetSetExitBridge())!=0 and len(n.GetSetEnterBridge())!=0 and all(map( lambda w:w.GetStartNeuron()!=None ,n.GetSetEnterBridge())) ,CapturedNeurons))
     self.__AllBridges = CapturedBridges
 
   def Clear(self):
@@ -153,10 +153,9 @@ class NeuralNetwork:
 
     #Calculate Signal error Sk for output neuron (k index of output neuron)
     for k in enumerate(self.GetAllOutputNeurons()): 
-      NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateDerivationLoss()
+      NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateDerivative()
     
-    
-    NeuronsToUpdate = self.GetAllHiddenNeurons()# + self.GetAllInputNeurons()
+    NeuronsToUpdate = self.GetAllInputNeurons() + self.GetAllHiddenNeurons()
     #Index using for control list of neurons to still update
     i = 0
     #FIRST STEP: assign for each neuron (input and hidden) own signal error
@@ -170,26 +169,22 @@ class NeuralNetwork:
       
       #Bridges to consider
       Bridges = ActualNeuron.GetSetExitBridge()
-      
       #If actual neuron can't get own signal error
-      if(None in list(map(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges))):
+      if(None in map(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges) ):
         i += 1 
         continue
       
       #Calculate Signal error Sj for hidden and input neuron (Actual neuron = neuron j, w is bridge to consider)
-      SignalError = sum(list(map(lambda w: 0 if w.GetStartNeuron() == None else w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges))) * ActualNeuron.CalculateDerivationLoss() 
+      SignalError = sum(map(lambda w: w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges)) * ActualNeuron.CalculateDerivative() 
       
       NeuronsLoss[ActualNeuron] = SignalError
       
       for w in Bridges: w.ResetUsedCount()
       # remove neuron from the list
       del NeuronsToUpdate[i]
-    
+    #print([ (k.__class__.__name__,v) for k,v in NeuronsLoss.items()])
     #Extract all neurons to update
     for Neuron in self.GetAllOutputNeurons()+self.GetAllHiddenNeurons():
-      if any(map(lambda x: x.GetStartNeuron() == None, Neuron.GetSetEnterBridge())):
-        continue
-      
       #Update bias
       Neuron.BiasValue = Neuron.CalculateUpdateBias(NeuronsLoss[Neuron]) 
 

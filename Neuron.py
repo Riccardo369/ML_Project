@@ -168,12 +168,16 @@ class ActivationNeuron(Neuron):
 
     CheckParametersFunction(ActivationFunction, 1)
     self.__ActivationFunction = ActivationFunction
-      
+  def SetActivationDerivative(self, Function):
+    CheckParametersFunction(Function, 1)
+    self.__ActivationDerivative = Function
   def SetActivationFunction(self, Function):
     CheckParametersFunction(Function, 1)
     self.__ActivationFunction = Function
-    
+  def CalculateDerivative(self):
+    return self.__ActivationDerivative(sum(self._InputVector) + self.BiasValue)
   def CalculateDerivationLoss(self):
+    print(sum(self._InputVector) + self.BiasValue)
     return self._GradientLossFunction(sum(self._InputVector) + self.BiasValue)
   
   def SetDerivationLoss(self, DerivationFunction):
@@ -181,7 +185,9 @@ class ActivationNeuron(Neuron):
     self._GradientLossFunction = DerivationFunction
     
   def Calculate(self):
-    if(not self.GetStateActived()): return 0
+    if(not self.GetStateActived()): 
+      
+      return 0
 
     Net = sum(self._InputVector) + self.BiasValue
     return self.__ActivationFunction(Net)

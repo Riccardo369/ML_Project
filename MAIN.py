@@ -17,7 +17,7 @@ from Phase import *
 from Regularization import *
 from Result import *
 import parameter_grid
-from models import BuildTwoLevelFeedForward, BuildTwoLevelFeedForwardMonk
+from models import BuildTwoLevelFeedForward, BuildTwoLevelFeedForwardMonk, BuildTwoLevelFeedForwardMonk1
 from model_selection import model_selection
 
 #Get all metrics for all K-folds considering: "LearningRate", "WeightDecay", "FoldsNumber"
@@ -52,10 +52,7 @@ dataset=Dataset.DataSet(Data,17,1)
 
 
 
-#set hyperparamters values
-LearningRate=np.linspace(0.1,0.3,3)
-WeightDecay=np.linspace(0.01,0.5,3)# a.k.a. Lambda in Tikohonv regularization
-FoldsNumber= np.array([2])
+
 
 
 
@@ -65,8 +62,8 @@ BestModelError=np.inf
 BestModelParameters=None
 BestModelPerformance=None
 parameters={
-  "learning_rate":np.array([0.01,0.1,0.5]),
-  "weight_decay":np.linspace(0.01,0.5,3),
+  "learning_rate":np.array([0.3,0.5]),
+  "weight_decay":np.array([0]),
   #"folds_number":np.array([2])
 }
 grid=parameter_grid.ParameterGrid(parameters)
@@ -75,18 +72,19 @@ grid=parameter_grid.ParameterGrid(parameters)
 print(f"performing grid search on {len(grid.get_parameters())} hyperparameters with {grid.get_size()} combinations")
 print(f"using a data set with {dataset.size()} examples, {dataset.input_size()} input features and {dataset.output_size()} output features")
 
-Model=BuildTwoLevelFeedForwardMonk(17, 4, 1, lambda op, tp: (op-tp)**2, lambda x, y: 0)
+
+
+Model=BuildTwoLevelFeedForwardMonk1(17, 5, 2, lambda op, tp: (op-tp)**2, lambda x, y,z: 0)
 Model.SetBeforeLossFunctionEvaluation(lambda op, tp: ( ((op[0]-tp[0])**2), 0))
 InitialState=Model.ExtractLearningState()
 
 
 
-tr_percent=0.8
+tr_percent=1
 
 
 
 tr,vl = dataset.get_dataset()[:int(dataset.size()*tr_percent)],dataset.get_dataset()[int(dataset.size()*tr_percent):]
-
 performance_metrics=dict()
 
 best_performance={
@@ -107,21 +105,46 @@ for i in range(grid.get_size()):
     
   for i in Model.GetAllNeurons(): 
     i.SetUpdateWeightsFunction(weights_update_function)
-
-  precision=0
+  
   accuracy_arr=[]
-  for epoch in range(100):
+  for epoch in range(500):
+    grad=np.zeros(2)
+    tr_precision=0
     for sample in tr:
       sample_in=sample[0]
       sample_target=sample[1]
+      if sample_target[0]==0:
+        sample_target=np.array([0,1])
+      else:
+        sample_target=np.array([1,0])
+
       sample_out=Model.Predict(sample_in)
-      if all(map((lambda c:c[0]==c[1]),zip(sample_out,sample_target))):
-        precision+=1
-      Model.Learn(sample_target-sample_out)
+      grad+=sample_target-sample_out
+
+      if np.argmax(sample_out)==0:
+        out_repr=np.array([1,0])
+      else:
+        out_repr=np.array([0,1])
+
+      if np.array_equal(sample_target,out_repr):
+        tr_precision+=1
+    Model.Learn(grad)
+    vl_precision=0
+    for sample in vl:
+      sample_in=sample[0]
+      sample_target=sample[1]
+      sample_out=Model.Predict(sample_in)
+      if np.argmax(sample_out)==0:
+        out_repr=np.array([1,0])
+      else:
+        out_repr=np.array([0,1])
+      if np.array_equal(sample_target,out_repr):
+        vl_precision+=1
+    print(f"tr {tr_precision}/{len(tr)}\tvl {vl_precision}/{len(vl)}")
     #training.Work(len(tr),True)          #train model
-    accuracy_arr.append(precision/len(tr))
-    precision=0
-    evaluation.Work(len(vl),True)
+    accuracy_arr.append(tr_precision/len(tr))
+    tr_precision=0
+    #evaluation.Work(len(vl),True)
   print(accuracy_arr)
   performance_metrics["training"]=training.GetMetrics()
   performance_metrics["validation"]=evaluation.GetMetrics()
