@@ -74,11 +74,13 @@ class NeuralNetwork:
     while(i<len(CapturedNeurons)):
       Bridges = CapturedNeurons[i].GetSetExitBridge() #Calculate every bridge
       for r in Bridges:
-        if(r.GetFinishNeuron() not in CapturedNeurons and not isinstance(r, InputNeuron) and not isinstance(r, OutputNeuron)): CapturedNeurons.append(r.GetFinishNeuron()) #Add neuron if not still exists in list
+        if(r.GetFinishNeuron() not in CapturedNeurons and r.GetFinishNeuron() not in self.__OutputNeuronVector): CapturedNeurons.append(r.GetFinishNeuron()) #Add neuron if not still exists in list
         if(r not in CapturedBridges): CapturedBridges.append(r) #Add bridge if not still exists in list
       i += 1
-
-    self.__HiddeNeurons = list(filter(lambda n: len(n.GetSetExitBridge())!=0 and len(n.GetSetEnterBridge())!=0 and all(map( lambda w:w.GetStartNeuron()!=None ,n.GetSetEnterBridge())) ,CapturedNeurons))
+      
+    self.__HiddeNeurons = CapturedNeurons
+    #self.__HiddeNeurons = list(filter(lambda n: len(n.GetSetExitBridge()) != 0  and len(n.GetSetEnterBridge()) !=0 and all(map( lambda w:w.GetStartNeuron() != None ,n.GetSetEnterBridge())), CapturedNeurons))
+    
     self.__AllBridges = CapturedBridges
 
   def Clear(self):
@@ -170,7 +172,7 @@ class NeuralNetwork:
       #Bridges to consider
       Bridges = ActualNeuron.GetSetExitBridge()
       #If actual neuron can't get own signal error
-      if(None in map(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges) ):
+      if(None in map(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges)):
         i += 1 
         continue
       

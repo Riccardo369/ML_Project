@@ -31,6 +31,7 @@ def BuildTwoLevelFeedForward(InputSize, HiddenSize, OutputSize, LossFunction, We
   mlp.CalculateAllStructure() 
   
   return mlp
+
 def BuildTwoLevelFeedForwardMonk(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0,classification_threshold=0):
   mlp = MLP(0,0,LossFunction)
   InputLayer = mlp.GetInputLayer()
@@ -56,6 +57,7 @@ def BuildTwoLevelFeedForwardMonk(InputSize, HiddenSize, OutputSize, LossFunction
   mlp.CalculateAllStructure() 
   
   return mlp
+
 def BuildTwoLevelFeedForwardMonk1(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0,classification_threshold=0):
   sigmoid= lambda x:1/(1+np.exp(-0.5*x))
   mlp = MLP(0,0,LossFunction)

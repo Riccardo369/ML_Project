@@ -167,22 +167,29 @@ class ActivationNeuron(Neuron):
     super().__init__(UpdateWeightsFunction, BiasUpdateFunction, LossFunction, *args)
 
     CheckParametersFunction(ActivationFunction, 1)
-    self.__ActivationFunction = ActivationFunction
+    self._ActivationFunction = ActivationFunction
+    
+    try: self._ActivationDerative = DerivationLambda(self._ActivationFunction, 0)
+    except: self._ActivationDerative = lambda x: 1
+    
   def SetActivationDerivative(self, Function):
     CheckParametersFunction(Function, 1)
-    self.__ActivationDerivative = Function
+    self._ActivationDerivative = Function
+    
+  def SetActivationDerative(self, DerivationFunction):
+    CheckParametersFunction(DerivationFunction, 1)
+    self._GradientLossFunction = DerivationFunction
+    
   def SetActivationFunction(self, Function):
     CheckParametersFunction(Function, 1)
-    self.__ActivationFunction = Function
+    self._ActivationFunction = Function
+    
   def CalculateDerivative(self):
-    return self.__ActivationDerivative(sum(self._InputVector) + self.BiasValue)
+    return self._ActivationDerivative(sum(self._InputVector) + self.BiasValue)
+  
   def CalculateDerivationLoss(self):
     print(sum(self._InputVector) + self.BiasValue)
     return self._GradientLossFunction(sum(self._InputVector) + self.BiasValue)
-  
-  def SetDerivationLoss(self, DerivationFunction):
-    CheckParametersFunction(DerivationFunction, 1)
-    self._GradientLossFunction = DerivationFunction
     
   def Calculate(self):
     if(not self.GetStateActived()): 

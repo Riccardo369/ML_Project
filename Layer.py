@@ -33,6 +33,9 @@ class Layer:
 
   def TurnOnAllNeurons(self):
     for i in self.__Neurons: i.TurnOn()
+    
+  def __contains__(self, x):
+    return x in self.__Neurons
 
   def __getitem__(self, i):
     return self.__Neurons[i]
