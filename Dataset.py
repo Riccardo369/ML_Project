@@ -28,11 +28,9 @@ class DataSet:
   def get_dataset(self):
     return self.__data
   def __str__(self):
-    return f""""
-dataset size:{self.__size}, input size:{self.__input_size}, output size:{self.__output_size}\n
-{  "\n".join(map(str,enumerate(self.__data))) }
-    """
-  
+    Result = f"dataset size:{self.__size}, input size:{self.__input_size}, output size:{self.__output_size}\n"
+    for i in range(self.__data): Result += f"{str(self.__data[i])} {i}\n"
+    return Result
 
 def TakeMonksDataSet(path):
   Data = np.genfromtxt(path, delimiter=' ',dtype=np.int32)

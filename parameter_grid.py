@@ -16,7 +16,6 @@ class ParameterGrid:
         item = self.__grid[index]
         return { self.__parameters_names[j]:value for j,value in enumerate(item)}
     def __str__(self):
-
-        return f"""
-hyperparmeters:{self.__parameters_names}, shape:{self.get_shape()}\n
-{"\n".join(map(str,self.__grid))}"""
+        Result = f"hyperparmeters:{self.__parameters_names}, shape:{self.get_shape()}\n"
+        for i in range(self.__grid): Result += f"{str(self.__grid[i])} {i}\n"
+        return Result

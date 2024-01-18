@@ -3,6 +3,7 @@ import random
 import math
 from BasedTools import *
 import Bridge
+import numpy as np
 
 #Responsabilità, rappresentare un neurone tenendo conto degl' archi di uscita, di entrata e della bias, in più calcolare la propria funzione di attivazione
 class Neuron:
@@ -14,7 +15,7 @@ class Neuron:
     CheckParametersFunction(LossFunction, 2)
 
     self._Bridges = []  #Lista che contiene i ponti in uscita (per la feedforward) ed  i ponti in entrata (per la backpropagation)
-    self._InputVector = [] #Lista degl' input che il neurone può avere
+    self._InputVector = np.array([]) #Lista degl' input che il neurone può avere
 
     self.__ActivedState = True
 
@@ -97,28 +98,36 @@ class Neuron:
     return list(self._InputVector)
 
   def ResetInputVector(self):
-    self._InputVector = [None for i in range(len(self._InputVector))]
+    self._InputVector = [None for _ in self._InputVector]
 
   def LoadInputFromBridge(self, b, x):
-    EnterBridgeList = self.GetSetEnterBridge()
-    SelectedBridge = None
-
-    for i in range(len(EnterBridgeList)):
-      if(EnterBridgeList[i] == b):
-        SelectedBridge = EnterBridgeList[i]
-        break
-    if(SelectedBridge == None): return False
-    self._InputVector[i] = SelectedBridge.Weight * x
-    return True
+    
+    try:
+      
+      EnterBridgeList = self.GetSetEnterBridge()
+      
+      #print(EnterBridgeList, hex(id(b)))
+      #print(b)
+      
+      #print(np.where(EnterBridgeList == b))
+      i = np.where(np.array(EnterBridgeList) == b)[0][0]
+      
+      #i = np.argmax(EnterBridgeList == b)
+      #print(f"i = {i}")
+      SelectedBridge = EnterBridgeList[i]
+      self._InputVector[i] = SelectedBridge.Weight * x
+      return True
+    
+    except: return False
 
   def AddBridge(self, b):
     self._Bridges.append(b)
-    self._InputVector.append(None)
+    self._InputVector = np.append(self._InputVector, None)
 
   def RemoveBridge(self, b):
     i = self.GetSetEnterBridge().index(b)
     self._Bridges.remove(b)
-    self._InputVector.pop(i)
+    self._InputVector = np.delete(self._InputVector, i)
 
   def AddConnectionTo(self, FinalNeuron):
     if(self.GetExitBridgeToNeuron(FinalNeuron) != None): return False   #Se l' arco esiste già
@@ -184,7 +193,7 @@ class ActivationNeuron(Neuron):
     CheckParametersFunction(Function, 1)
     self._ActivationFunction = Function
     
-  def CalculateDerivative(self):
+  def CalculateActionDerivative(self):
     return self._ActivationDerivative(sum(self._InputVector) + self.BiasValue)
   
   def CalculateDerivationLoss(self):
@@ -192,12 +201,10 @@ class ActivationNeuron(Neuron):
     return self._GradientLossFunction(sum(self._InputVector) + self.BiasValue)
     
   def Calculate(self):
-    if(not self.GetStateActived()): 
-      
-      return 0
+    if(not self.GetStateActived()):  return 0
 
-    Net = sum(self._InputVector) + self.BiasValue
-    return self.__ActivationFunction(Net)
+    Net = np.sum(self._InputVector) + self.BiasValue
+    return self._ActivationFunction(Net)
 
 class InputNeuron(ActivationNeuron):
   def __init__(self,ActivationFunction:LambdaType,UpdateWeightsFunction: LambdaType,BiasUpdateFunction:LambdaType,LossFunction:LambdaType):
