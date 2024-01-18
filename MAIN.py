@@ -121,7 +121,7 @@ plot_model_performance(best_performance["training"],"red","blue","epochs",f"best
 whole_tr= DataSet(dataset.get_dataset(),17,2,True)
 final_training=TrainPhase(Model,whole_tr,lambda x:np.array([ 1 if v==np.max(x) else 0 for v in x ]))
 for epoch in range(1000):
-  final_training.Work(final_training.size(),True)
+  final_training.Work(final_training,True)
 plot_model_performance(final_training.GetMetrics(),"red","blue","epochs",f"final retraining performance with hyperparameters {grid[best_performance["index"]]}")
 
 

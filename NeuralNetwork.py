@@ -12,7 +12,7 @@ class NeuralNetwork:
   def __init__(self, InputNumber: int, OutputNumber: int, LossLambdaFunctionEvaluation: LambdaType):
 
     CheckParametersFunction(LossLambdaFunctionEvaluation, 2)
-
+    self.__HiddenNeurons = []
     self.__InputNeuronVector = InputLayer(InputNumber)
     self.__OutputNeuronVector = OutputLayer(OutputNumber, lambda x, y: x)
 
@@ -83,7 +83,7 @@ class NeuralNetwork:
       i += 1
       
     #self.__HiddeNeurons = CapturedNeurons
-    self.__HiddeNeurons = list(filter(lambda n: len(n.GetSetExitBridge()) != 0  and len(n.GetSetEnterBridge()) !=0 and all(map( lambda w:w.GetStartNeuron() != None ,n.GetSetEnterBridge())), CapturedNeurons))
+    self.__HiddenNeurons = list(filter(lambda n: len(n.GetSetExitBridge()) != 0  and len(n.GetSetEnterBridge()) !=0 and all(map( lambda w:w.GetStartNeuron() != None ,n.GetSetEnterBridge())), CapturedNeurons))
     
     self.__AllBridges = CapturedBridges
     
