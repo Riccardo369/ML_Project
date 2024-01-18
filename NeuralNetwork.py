@@ -82,8 +82,8 @@ class NeuralNetwork:
         if(r not in CapturedBridges): CapturedBridges.append(r) #Add bridge if not still exists in list
       i += 1
       
-    self.__HiddenNeurons = CapturedNeurons
-    #self.__HiddenNeurons = list(filter(lambda n: len(n.GetSetExitBridge()) != 0  and len(n.GetSetEnterBridge()) !=0 and all(map( lambda w:w.GetStartNeuron() != None ,n.GetSetEnterBridge())), CapturedNeurons))
+    #self.__HiddeNeurons = CapturedNeurons
+    self.__HiddeNeurons = list(filter(lambda n: len(n.GetSetExitBridge()) != 0  and len(n.GetSetEnterBridge()) !=0 and all(map( lambda w:w.GetStartNeuron() != None ,n.GetSetEnterBridge())), CapturedNeurons))
     
     self.__AllBridges = CapturedBridges
     
@@ -191,7 +191,6 @@ class NeuralNetwork:
     return np.array([self.__NeuronsLastOutput[NeuronOutput] for NeuronOutput in self.__OutputNeuronVector]) 
   
   def Learn(self, LossValueVector):
-    
     #Check length parameter
     if(len(LossValueVector) != len(self.__OutputNeuronVector)): raise ValueError(f"{len(self.__OutputNeuronVector)} Output neurons but {len(LossValueVector)} loss values insert")
     
@@ -232,17 +231,17 @@ class NeuralNetwork:
       for w in Bridges: w.ResetUsedCount()
       # remove neuron from the list
       del NeuronsToUpdate[i]
-    #print([ (k.__class__.__name__,v) for k,v in NeuronsLoss.items()])
     #Extract all neurons to update
-    for Neuron in self.GetAllOutputNeurons()+self.GetAllHiddenNeurons():
+    return NeuronsLoss,dict(self.__NeuronsLastOutput)
+    """ for Neuron in self.GetAllOutputNeurons()+self.GetAllHiddenNeurons():
       #Update bias
       Neuron.BiasValue = Neuron.CalculateUpdateBias(NeuronsLoss[Neuron]) 
 
       EnterNeuronsOutput = list(map(lambda x: self.__NeuronsLastOutput[x.GetStartNeuron()], Neuron.GetSetEnterBridge()))
-
+      #print(NeuronsLoss[Neuron],Neuron.__class__.__name__)
       #Update weights
       WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron], EnterNeuronsOutput)
-      for i, Weight in enumerate(Neuron.GetSetEnterBridge()): Weight.Weight = WeightsNewValue[i]
+      for i, Weight in enumerate(Neuron.GetSetEnterBridge()): Weight.Weight = WeightsNewValue[i] """
 
   def SetLossFunctionEvaluation(self, Function):
     CheckParametersFunction(Function, 2)

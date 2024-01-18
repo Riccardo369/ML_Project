@@ -10,7 +10,7 @@ class Neuron:
 
   def __init__(self, UpdateWeightsFunction: LambdaType, BiasUpdateFunction: LambdaType, LossFunction: LambdaType, *args):
 
-    CheckParametersFunction(UpdateWeightsFunction, 3)
+    CheckParametersFunction(UpdateWeightsFunction, 2)
     CheckParametersFunction(BiasUpdateFunction, 2)
     CheckParametersFunction(LossFunction, 2)
 
@@ -36,9 +36,9 @@ class Neuron:
     
     self.__BeforeGradientLossFunction = lambda x, y: (x, y)
 
-  def CalculateUpdatedWeights(self, LossGradientValue, NeuronOutputs):
-    LossGradientValue, NeuronOutputs = self.__BeforeUpdateWeightsFunction(LossGradientValue, NeuronOutputs)
-    return np.longdouble(self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue, NeuronOutputs))
+  def CalculateUpdatedWeights(self, LossGradientValue):
+    LossGradientValue, NeuronOutputs = self.__BeforeUpdateWeightsFunction(LossGradientValue,[])
+    return np.longdouble(self.__UpdateWeightsFunction(list(map(lambda r: r.Weight, self.GetSetEnterBridge())), LossGradientValue))
 
   def CalculateUpdateBias(self, LossGradientValue):
     LossGradientValue = self.__BeforeUpdateBiasFunction(LossGradientValue)
@@ -53,7 +53,7 @@ class Neuron:
     return np.longdouble(self._GradientLossFunction(CalculatedOutput, TargetOutput))
 
   def SetUpdateWeightsFunction(self, Function: LambdaType):
-    CheckParametersFunction(Function, 3)
+    CheckParametersFunction(Function, 2)
     self.__UpdateWeightsFunction = Function
 
   def SetUpdateBiasFunction(self, Function: LambdaType):
@@ -197,7 +197,7 @@ class ActivationNeuron(Neuron):
     return self._ActivationDerivative(sum(self._InputVector) + self.BiasValue)
   
   def CalculateDerivationLoss(self):
-    print(sum(self._InputVector) + self.BiasValue)
+    #print(sum(self._InputVector) + self.BiasValue)
     return self._GradientLossFunction(sum(self._InputVector) + self.BiasValue)
     
   def Calculate(self):

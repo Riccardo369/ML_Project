@@ -76,18 +76,25 @@ def BuildTwoLevelFeedForwardMonk1(InputSize, HiddenSize, OutputSize, LossFunctio
     OutputLayer.InsertNeuron(neuron,i)
     
   HiddenLayer1 = Layer(ActivationNeuron, HiddenSize, lambda x:x if x>=Threshold else 0, WeightsUpdateFunction, lambda x, y: 0, LossFunction)
-  HiddenLayer2 = Layer(ActivationNeuron, HiddenSize, lambda x:x if x>=Threshold else 0, WeightsUpdateFunction, lambda x, y: 0, LossFunction)
-  for neuron in HiddenLayer2.GetNeurons():
-    neuron.SetActivationDerivative(lambda x:1 if x>=Threshold else 0)
   for neuron in HiddenLayer1.GetNeurons():
     neuron.SetActivationDerivative(lambda x:1 if x>=Threshold else 0) 
  
   InputLayer.ConnectTo(HiddenLayer1)
-  HiddenLayer1.ConnectTo(HiddenLayer2)
   #HiddenLayer1.ConnectTo(HiddenLayer2)
 
-  HiddenLayer2.ConnectTo(OutputLayer) 
+  HiddenLayer1.ConnectTo(OutputLayer) 
       
   mlp.CalculateAllStructure() 
   
   return mlp
+
+
+
+def build_mlp(layers,loss_function):
+  mlp=MLP(0,0,loss_function)
+  for i in enumerate(layers[0:-2]):
+    layers[i].ConnectTo(layers[i+1])
+  mlp.CalculateAllStructure()
+  return mlp
+
+

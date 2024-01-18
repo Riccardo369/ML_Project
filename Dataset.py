@@ -7,7 +7,7 @@ def TakeCupDataset(path):
   return Result
 
 class DataSet:
-  def __init__(self,data,input_size,output_size):
+  def __init__(self,data,input_size,output_size,shuffle_dataset=False):
     for row in data:
       if row[0].size != input_size or row[1].size != output_size:
         raise ValueError("the size for the input and the output must be matched by every row in the dataset")
@@ -15,12 +15,25 @@ class DataSet:
     self.__size=len(data)
     self.__input_size=input_size
     self.__output_size=output_size
+    self.__batch_index=0
+    self.__shuffle_dataset=shuffle_dataset
   def __getitem__(self,index):
     if index > (self.__size -1) or index < 0:
       raise ValueError("error index out of bound")
     return self.__data[index]
   def size(self):
     return self.__size
+  def set_batch_index(self,index):
+    if index<0 or index>=self.__size:
+      raise ValueError("index must be within dataset size")
+    self.__batch_index=index
+  def next_batch(self,n):
+    result=np.array([ self.__data[(self.__batch_index+j)%self.__size] for j in range(n)],dtype=object)
+    self.__batch_index+=n
+    if self.__shuffle_dataset and self.__batch_index >= self.__size:
+      np.random.shuffle(self.__data)
+    self.__batch_index%=self.__size
+    return result
   def input_size(self):
     return self.__input_size
   def output_size(self):
@@ -34,15 +47,15 @@ class DataSet:
 
 def TakeMonksDataSet(path):
   Data = np.genfromtxt(path, delimiter=' ',dtype=np.int32)
-  Result = [[row[:1],row[1:7]] for row in Data]
+  Result = np.array([[row[:1],row[1:7]] for row in Data],dtype=object)
   return Result
 
 #Extract batches from Training dataset
-def BatchesExtraction(TR, n, TakeResidue = True):
-  Result = []
-  for i in range(0, len(TR), n): Result.append(TR[i: i+n])
-  if(len(TR)%n > 0 and not TakeResidue): del Result[-1]
-  return Result
+def BatchesExtraction(TR, n):
+  l=int(len(TR)/n)
+  print(TR[:l])
+  result = np.reshape(np.array(TR[:l],dtype=object),(-1,n))
+  return result
 
 def one_hot_encoding(values):
   """"given an array of values creates the corresponding one-hot-encoding"""
@@ -53,16 +66,19 @@ def one_hot_encoding(values):
     encoding[ values[i]][i]=1
   return encoding
 
-def convert_to_one_hot(features_names,encoding,data):
+def convert_to_one_hot(features_names,target_names,encoding,data):
   result=[]
   for example in data:
     target=example[0]
     input_value=example[1]
 
     encodings=[]
-    for i,feature in enumerate(features_names):
-        encodings.append(encoding[feature][input_value[i]])
-    result.append([np.concatenate(encodings),np.array(target)])
+    for i,input_feature in enumerate(features_names):
+        encodings.append(encoding[input_feature][input_value[i]])
+    targets=[]
+    for i,target_feature in enumerate(target_names):
+        targets.append(encoding[target_feature][target[i]])
+    result.append([np.concatenate(encodings),np.concatenate(targets)])
   return result
 
 def encode_dataset_to_one_hot(features):
