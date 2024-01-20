@@ -94,61 +94,60 @@ class NeuralNetwork:
     for i in self.__AllBridges: i.ResetUsedCount()
     self.__NeuronsLastOutput.clear()
 
-  # def Predict(self, InputVector):
-
-  #   if(len(InputVector) != len(self.__InputNeuronVector)): raise ValueError(f"Input vector must be {len(self.__InputNeuronVector)}, but is {len(InputVector)}")
-
-  #   self.Clear() #Clear data of count bridge and vectore neuron input
-
-  #   NeuronsToActive = []
-
-  #   #Load input data and Load neuron to activate
-  #   for i, NeuronInput in enumerate(self.__InputNeuronVector):
-
-  #     BridgeToStart = NeuronInput.GetEnterBridgeFromNeuron(None)
-  #     BridgeToStart.ResetUsedCount()
-  #     BridgeToStart.IncrementUsedCount()
-      
-  #     NeuronInput.LoadInputFromBridge(BridgeToStart, InputVector[i])
-
-  #     NeuronsToActive.append(NeuronInput)
-    
-  #   Result = [None for _ in self.__OutputNeuronVector]
-
-  #   i = 0
-
-  #   while(len(NeuronsToActive) > 0):
-
-  #     ActualNeuron = NeuronsToActive[i]    #Choosed neuron to analyze
-
-  #     try:
-  #       if(min(map(lambda x: x.GetUsedCount(), ActualNeuron.GetSetEnterBridge())) == 0): #If all bridges have not been activated, go to the next neuron
-  #         i = (i+1) % len(NeuronsToActive)
-  #         continue
-  #     except: pass
-
-  #     Value = ActualNeuron.Calculate()
-      
-  #     #Calculate output, spread output to next neuron, add next neuron and delete this neuron from NeuronToActivate
-  #     self.__NeuronsLastOutput[ActualNeuron] = Value
-
-  #     #If ActualNeuron is OutputNeuron, save output value to final list according to his index in self.__OutputNeuronVector
-  #     # it is an output neuron if it has no exit bridges
-  #     if(ActualNeuron in self.__OutputNeuronVector.GetNeurons()): Result[self.__OutputNeuronVector.GetNeurons().index(ActualNeuron)] = Value
-
-  #     #For each bridge from ActualNeuron
-  #     for b in ActualNeuron.GetSetExitBridge():
-
-  #       if(b.GetFinishNeuron() not in NeuronsToActive): NeuronsToActive.append(b.GetFinishNeuron())       #Next neuron is added to list
-        
-  #       b.GetFinishNeuron().LoadInputFromBridge(b, Value)                                                 #Value is spread to new neuron
-  #       b.IncrementUsedCount()                                                                            #Updates Bridge's counter
-
-  #     del NeuronsToActive[i]
-
-  #   return np.array(Result)
-  
   def Predict(self, InputVector):
+
+    if(len(InputVector) != len(self.__InputNeuronVector)): raise ValueError(f"Input vector must be {len(self.__InputNeuronVector)}, but is {len(InputVector)}")
+    self.Clear() #Clear data of count bridge and vectore neuron input
+
+    NeuronsToActive = []
+
+     #Load input data and Load neuron to activate
+    for i, NeuronInput in enumerate(self.__InputNeuronVector):
+
+      BridgeToStart = NeuronInput.GetEnterBridgeFromNeuron(None)
+      BridgeToStart.ResetUsedCount()
+      BridgeToStart.IncrementUsedCount()
+      
+      NeuronInput.LoadInputFromBridge(BridgeToStart, InputVector[i])
+
+      NeuronsToActive.append(NeuronInput)
+    
+    Result = [None for _ in self.__OutputNeuronVector]
+
+    i = 0
+
+    while(len(NeuronsToActive) > 0):
+
+      ActualNeuron = NeuronsToActive[i]    #Choosed neuron to analyze
+
+      try:
+        if(min(map(lambda x: x.GetUsedCount(), ActualNeuron.GetSetEnterBridge())) == 0): #If all bridges have not been activated, go to the next neuron
+          i = (i+1) % len(NeuronsToActive)
+          continue
+      except: pass
+
+      Value = ActualNeuron.Calculate()
+      
+       #Calculate output, spread output to next neuron, add next neuron and delete this neuron from NeuronToActivate
+      self.__NeuronsLastOutput[ActualNeuron] = Value
+
+       #If ActualNeuron is OutputNeuron, save output value to final list according to his index in self.__OutputNeuronVector
+       # it is an output neuron if it has no exit bridges
+      if(ActualNeuron in self.__OutputNeuronVector.GetNeurons()): Result[self.__OutputNeuronVector.GetNeurons().index(ActualNeuron)] = Value
+
+       #For each bridge from ActualNeuron
+      for b in ActualNeuron.GetSetExitBridge():
+
+        if(b.GetFinishNeuron() not in NeuronsToActive): NeuronsToActive.append(b.GetFinishNeuron())       #Next neuron is added to list
+        
+        b.GetFinishNeuron().LoadInputFromBridge(b, Value)                                                 #Value is spread to new neuron
+        b.IncrementUsedCount()                                                                            #Updates Bridge's counter
+
+      del NeuronsToActive[i]
+
+    return np.array(Result)
+  
+  """   def Predict(self, InputVector):
     
     def CalculationNeuron(neuron, Dict, EventsToWait, PersonalEventToActive, Lock):
       
@@ -188,7 +187,7 @@ class NeuralNetwork:
     
     for event in self.__NeuronEventThreads: self.__NeuronEventThreads[event].clear()
    
-    return np.array([self.__NeuronsLastOutput[NeuronOutput] for NeuronOutput in self.__OutputNeuronVector]) 
+    return np.array([self.__NeuronsLastOutput[NeuronOutput] for NeuronOutput in self.__OutputNeuronVector])  """
   
   def Learn(self, LossValueVector):
     #Check length parameter
@@ -242,7 +241,9 @@ class NeuralNetwork:
       #Update weights
       WeightsNewValue = Neuron.CalculateUpdatedWeights(NeuronsLoss[Neuron], EnterNeuronsOutput)
       for i, Weight in enumerate(Neuron.GetSetEnterBridge()): Weight.Weight = WeightsNewValue[i] """
-
+  def SetWeightsUpdateFunction(self,Function):
+    for n in self.GetAllNeurons():
+      n.SetUpdateWeightsFunction(Function)
   def SetLossFunctionEvaluation(self, Function):
     CheckParametersFunction(Function, 2)
     self.__LambdaLossFunctionEvaluation = Function
@@ -285,7 +286,7 @@ class NeuralNetwork:
     #time.sleep(0.5)
     
     return Result
-
+  
   #NeuralNetwork State
   class NeuralNetworkState:
     def __init__(self, Weights: list[float], Biases: list[float]):

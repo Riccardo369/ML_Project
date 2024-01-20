@@ -10,6 +10,8 @@ from BasedTools import *
 from Bridge import *
 from Dataset import *
 from Evaluation import *
+from GridSearch import GridSearch
+from Holdout import Holdout
 from Layer import *
 from NeuralNetwork import *
 from Neuron import *
@@ -19,15 +21,6 @@ from Result import *
 import parameter_grid
 from models import BuildTwoLevelFeedForward, BuildTwoLevelFeedForwardMonk, BuildTwoLevelFeedForwardMonk1
 from model_selection import model_selection
-
-#Get all metrics for all K-folds considering: "LearningRate", "WeightDecay", "FoldsNumber"
-#Print a graph of KFold
-
-
-#instance desired model
-#load dataset
-#Data=TakeDataset('FilesData/ML-CUP23-TR.csv')[:200]
-
 import Dataset
 import numpy as np
 #loading monk dataset
@@ -51,6 +44,49 @@ Data=convert_to_one_hot(["a1","a2","a3","a4","a5","a6"],["class"],monk_encoding,
 dataset=Dataset.DataSet(Data,17,2)
 
 
+grid=parameter_grid.ParameterGrid({
+  "learning_rate":np.linspace(0.03,0.25,2),
+  "weight_decay":np.array([0.0]),
+})
+
+print(f"performing grid search on {len(grid.get_parameters())} hyperparameters with {grid.get_size()} combinations")
+print(f"using a data set with {dataset.size()} examples, {dataset.input_size()} input features and {dataset.output_size()} output features")
+
+Model=BuildTwoLevelFeedForwardMonk1(17, 4, 2, lambda op, tp: (op-tp)**2, lambda x, y: 0)
+Model.SetBeforeLossFunctionEvaluation(lambda op, tp: ( ((op[0]-tp[0])**2), 0))
+
+
+InitialState=Model.ExtractLearningState()
+
+tr_percent=0.8
+tr_size=int(dataset.size()*tr_percent)
+#split dataset
+print(f"dataset split {tr_percent}/{1-tr_percent}")
+monk_classification=lambda x:np.array([ 1 if v==np.max(x) else 0 for v in x ])
+training_strategy=Holdout(dataset.get_dataset(),
+                          dataset.input_size(),
+                          dataset.output_size(),
+                          False,
+                          tr_size)
+
+grid_search=GridSearch(Model,
+                      1,
+                      grid,
+                      training_strategy
+                      )
+
+result=grid_search.search(monk_classification)
+Model.LoadLearningState(result["model_state"])
+final_holdout=Holdout(dataset.get_dataset(),
+                      dataset.input_size(),
+                      dataset.output_size(),
+                      False,
+                      dataset.size()
+                      )
+final_retrain=final_holdout.train(Model,1,monk_classification)
+plot_model_performance(final_retrain,"red","blue","","final retraining performance of the best model")
+exit()
+
 #Choose best model
 BestModelIndex=-1
 BestModelError=np.inf
@@ -58,74 +94,13 @@ BestModelParameters=None
 BestModelPerformance=None
 
 
-parameters={
-  #"learning_rate":np.linspace(0.07,0.25,5),for stocastic
-  "learning_rate":np.linspace(0.2,0.5,20),
-  "weight_decay":np.array([0]),
-  #"folds_number":np.array([2])
-}
-grid=parameter_grid.ParameterGrid(parameters)
 
-print(f"performing grid search on {len(grid.get_parameters())} hyperparameters with {grid.get_size()} combinations")
-print(f"using a data set with {dataset.size()} examples, {dataset.input_size()} input features and {dataset.output_size()} output features")
-
-Model=BuildTwoLevelFeedForwardMonk1(17, 5, 2, lambda op, tp: (op-tp)**2, lambda x, y: 0)
-Model.SetBeforeLossFunctionEvaluation(lambda op, tp: ( ((op[0]-tp[0])**2), 0))
-InitialState=Model.ExtractLearningState()
-
-
-
-tr_percent=0.8
-
-
-#split dataset
-#tr,vl = dataset.get_dataset()[:int(dataset.size()*tr_percent)],dataset.get_dataset()[int(dataset.size()*tr_percent):]
-tr= DataSet(dataset.get_dataset()[:int(dataset.size()*tr_percent)],17,2,True)
-vl= DataSet(dataset.get_dataset()[int(dataset.size()*tr_percent):],17,2)
-print(f"dataset split {tr_percent}/{1-tr_percent}")
-print(f"{tr.size()} samples for training")
-print(f"{vl.size()} samples for validation")
 
 best_performance={
   "index":-1,
   "training":{"Loss":[np.inf],"Precision":[np.inf]},
   "validation":{"Loss":[np.inf],"Precision":[np.inf]},
 }
-
-for i in range(grid.get_size()):
-  #reset model to initial state
-  Model.LoadLearningState(InitialState)
-  hyperparameters=grid[i]
-  print(f"hyperparameters:{hyperparameters}")
-
-  training=TrainPhase(Model,tr,lambda x:np.array([ 1 if v==np.max(x) else 0 for v in x ]))
-  evaluation=EvaluationPhase(Model,vl,lambda x:np.array([ 1 if v==np.max(x) else 0 for v in x ]))
-
-  def weights_update_function(weights,GradientLoss):
-    #print(GradientLoss)
-    return list(map(lambda w: w[0] +hyperparameters["learning_rate"]*w[1] - hyperparameters["weight_decay"]*w[0],zip(weights,GradientLoss)))
-    
-  for n in Model.GetAllNeurons(): 
-    n.SetUpdateWeightsFunction(weights_update_function)
-  for epoch in range(1000):
-    training.Work(tr.size(),True)
-    print("tr precision ",training.GetMetrics()["Precision"][-1],"\tloss ",training.GetMetrics()["Loss"][-1],epoch+1)
-    evaluation.Work(vl.size(),True)
-  if evaluation.GetMetrics()["Loss"][-1] < best_performance["validation"]["Loss"][-1]:
-    best_performance["index"]=i
-    best_performance["training"]=training.GetMetrics()
-    best_performance["validation"]=evaluation.GetMetrics()
-print(f"grid search done, bestmodel: np.{best_performance["index"]} with hyperparameters {grid[best_performance["index"]]}")
-plot_model_performance(best_performance["training"],"red","blue","epochs",f"best model with hyperparameters {grid[best_performance["index"]]}")
-#retrain on whole dataset the best model
-whole_tr= DataSet(dataset.get_dataset(),17,2,True)
-final_training=TrainPhase(Model,whole_tr,lambda x:np.array([ 1 if v==np.max(x) else 0 for v in x ]))
-for epoch in range(1000):
-  final_training.Work(final_training,True)
-plot_model_performance(final_training.GetMetrics(),"red","blue","epochs",f"final retraining performance with hyperparameters {grid[best_performance["index"]]}")
-
-
-
 for i in range(grid.get_size()):
   print(f">> training model no.{i+1} hyperparameters: {grid[i]}")
   hyperparameters=grid[i]

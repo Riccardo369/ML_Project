@@ -20,7 +20,7 @@ class Neuron:
     self.__ActivedState = True
 
     if(len(args) > 0): self.BiasValue = np.longdouble(args[0])                        #Se la nostra bias è già scelta
-    else: self.BiasValue = np.longdouble(random.randint(-10000, 10000) / 1000)        #Valore scelto per convenienza da -10 ad 10 ma si può cambiare il range volendo
+    else: self.BiasValue = np.longdouble(random.randint(-1000, 1000) / 1000)        #Valore scelto per convenienza da -10 ad 10 ma si può cambiare il range volendo
 
     self.__UpdateWeightsFunction = UpdateWeightsFunction
     self.__BeforeUpdateWeightsFunction = lambda x, y: (x, y)
@@ -180,7 +180,6 @@ class ActivationNeuron(Neuron):
     
     try: self._ActivationDerative = DerivationLambda(self._ActivationFunction, 0)
     except: self._ActivationDerative = lambda x: 1
-    
   def SetActivationDerivative(self, Function):
     CheckParametersFunction(Function, 1)
     self._ActivationDerivative = Function

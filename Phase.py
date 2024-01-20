@@ -25,8 +25,6 @@ class TrainPhase(Phase):
 
   def Work(self, BatchDimension,conf_matrix=False):
     if(BatchDimension < 1 or BatchDimension > self._Dataset.size()): raise ValueError("batch dimension must be above 0 and lower or equal to the dataset dimension")
-    TotalLossValue = 0  
-    gradient=np.zeros(self._Dataset.output_size(),dtype=np.longdouble)
     batch=self._Dataset.next_batch(BatchDimension)
 
     error_signals=[]
@@ -36,7 +34,6 @@ class TrainPhase(Phase):
       input_vector=example[0]
       target_vector=example[1]
       output_vector=self._Model.Predict(input_vector)
-      #gradient+=target_vector-output_vector
       neurons_loss,neurons_output=self._Model.Learn(target_vector-output_vector)
       error_signals.append(neurons_loss)
       output_values.append(neurons_output)
@@ -48,10 +45,13 @@ class TrainPhase(Phase):
       #error signal of the unit for each pattern
       errors=np.array([ e[n] for e in error_signals ])
       for en in entering_neurons:
-        grad.append(np.array( [o[en] for o in output_values ])@errors )
+        grad.append((np.array( [o[en] for o in output_values ])@errors) )
       new_weights=n.CalculateUpdatedWeights(grad)
       for i,w in enumerate(n.GetSetEnterBridge()):
         w.Weight=new_weights[i]
+
+      new_bias=n.CalculateUpdateBias(np.sum(errors))
+      n.BiasValue=new_bias
 
 
     precision=0
@@ -67,7 +67,7 @@ class TrainPhase(Phase):
       outputs[i]=output_vector
       targets[i]=target_vector
     
-    loss_value= np.sum( (outputs-targets)@(outputs-targets) )
+    loss_value= np.sum( (outputs-targets)@(outputs-targets)) * (1/BatchDimension)
     self._Metrics["Loss"].append(loss_value)
     if conf_matrix:
       self._Metrics["Precision"].append(precision/self._Dataset.size())
@@ -92,7 +92,7 @@ class EvaluationPhase(Phase):
       outputs[i]=output_vector
       targets[i]=target_vector
     
-    loss_value= np.sum( (outputs-targets)@(outputs-targets) )
+    loss_value= np.sum( (outputs-targets)@(outputs-targets) )*(1/BatchDimension)
     self._Metrics["Loss"].append(loss_value)
-    if conf_matrix:
+    if conf_matrix and self._Dataset.size()!=0:
       self._Metrics["Precision"].append(precision/self._Dataset.size())

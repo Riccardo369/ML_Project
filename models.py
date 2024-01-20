@@ -59,12 +59,12 @@ def BuildTwoLevelFeedForwardMonk(InputSize, HiddenSize, OutputSize, LossFunction
   return mlp
 
 def BuildTwoLevelFeedForwardMonk1(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0,classification_threshold=0):
-  sigmoid= lambda x:1/(1+np.exp(-0.5*x))
+  sigmoid= lambda x:1/(1+np.exp(-x))
   mlp = MLP(0,0,LossFunction)
   InputLayer = mlp.GetInputLayer()
   for i in range(InputSize):
-    neuron=InputNeuron(lambda x: x if x>=Threshold else 0,WeightsUpdateFunction,lambda x,y:0,LossFunction)
-    neuron.SetActivationDerivative(lambda x:1 if x>=Threshold else 0)
+    neuron=InputNeuron(lambda x:x,WeightsUpdateFunction,lambda x,y:0,LossFunction)
+    neuron.SetActivationDerivative(lambda x:1)
     InputLayer.InsertNeuron(neuron,i)
 
   for i in InputLayer: i.AddBridge(Bridge(None, i, 1))
