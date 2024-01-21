@@ -12,6 +12,7 @@ from Dataset import *
 from Evaluation import *
 from GridSearch import GridSearch
 from Holdout import Holdout
+from KFold import KFold
 from Layer import *
 from NeuralNetwork import *
 from Neuron import *
@@ -19,30 +20,14 @@ from Phase import *
 from Regularization import *
 from Result import *
 import parameter_grid
-from models import BuildTwoLevelFeedForward, BuildTwoLevelFeedForwardMonk, BuildTwoLevelFeedForwardMonk1
+from models import BuildTwoLevelFeedForward, BuildTwoLevelFeedForwardMonk, build_CUP_MLP
 from model_selection import model_selection
 import Dataset
 import numpy as np
 #loading monk dataset
-monk1_tr=Dataset.TakeMonksDataSet("FilesData/monks-1.train")
-#describe features and their values
-monk_features={
-  "a1":[1,2,3],
-  "a2":[1,2,3],
-  "a3":[1,2],
-  "a4":[1,2,3],
-  "a5":[1,2,3,4],
-  "a6":[1,2],
-  "class":[0,1]
-}
+ml_cup_tr=Dataset.TakeCupDataset("FilesData/ML-CUP23-TR.csv")
 
-#create the encoding for the one hot representation
-monk_encoding= encode_dataset_to_one_hot(monk_features)
-#apply encoding to the dataset
-Data=convert_to_one_hot(["a1","a2","a3","a4","a5","a6"],["class"],monk_encoding,monk1_tr)
-
-dataset=Dataset.DataSet(Data,17,2)
-
+dataset=Dataset.DataSet(ml_cup_tr,10,3)
 
 grid=parameter_grid.ParameterGrid({
   "learning_rate":np.linspace(0.03,0.25,2),
@@ -52,22 +37,22 @@ grid=parameter_grid.ParameterGrid({
 print(f"performing grid search on {len(grid.get_parameters())} hyperparameters with {grid.get_size()} combinations")
 print(f"using a data set with {dataset.size()} examples, {dataset.input_size()} input features and {dataset.output_size()} output features")
 
-Model=BuildTwoLevelFeedForwardMonk1(17, 4, 2, lambda op, tp: (op-tp)**2, lambda x, y: 0)
-Model.SetBeforeLossFunctionEvaluation(lambda op, tp: ( ((op[0]-tp[0])**2), 0))
+Model=build_CUP_MLP(10, 4, 3, lambda op, tp: (op-tp)**2, lambda x, y: 0)
+Model.SetBeforeLossFunctionEvaluation(lambda op, tp: ( math.sqrt( (op[0]-tp[0])**2 + (op[1]-tp[1])**2 + (op[2]-tp[2])**2  )  , 0))
 
 
 InitialState=Model.ExtractLearningState()
 
-tr_percent=0.8
-tr_size=int(dataset.size()*tr_percent)
+folds_number=4
+
 #split dataset
-print(f"dataset split {tr_percent}/{1-tr_percent}")
-monk_classification=lambda x:np.array([ 1 if v==np.max(x) else 0 for v in x ])
-training_strategy=Holdout(dataset.get_dataset(),
-                          dataset.input_size(),
-                          dataset.output_size(),
-                          False,
-                          tr_size)
+print(f"folds number {folds_number}")
+training_strategy=KFold(dataset.get_dataset(),
+                        dataset.input_size(),
+                        dataset.output_size(),
+                        False,
+                        folds_number
+                        )
 
 grid_search=GridSearch(Model,
                       1,
@@ -75,7 +60,8 @@ grid_search=GridSearch(Model,
                       training_strategy
                       )
 
-result=grid_search.search(monk_classification)
+result=grid_search.search()
+
 Model.LoadLearningState(result["model_state"])
 final_holdout=Holdout(dataset.get_dataset(),
                       dataset.input_size(),
@@ -83,7 +69,7 @@ final_holdout=Holdout(dataset.get_dataset(),
                       False,
                       dataset.size()
                       )
-final_retrain=final_holdout.train(Model,1,monk_classification)
+final_retrain=final_holdout.train(Model,1)
 plot_model_performance(final_retrain,"red","blue","","final retraining performance of the best model")
 exit()
 

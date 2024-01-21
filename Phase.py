@@ -25,18 +25,18 @@ class TrainPhase(Phase):
 
   def Work(self, BatchDimension,conf_matrix=False):
     if(BatchDimension < 1 or BatchDimension > self._Dataset.size()): raise ValueError("batch dimension must be above 0 and lower or equal to the dataset dimension")
-    batch=self._Dataset.next_batch(BatchDimension)
-
+    batch=self._Dataset.next_epoch(BatchDimension)
+    epoch_size=sum(map(len,batch))
     error_signals=[]
     output_values=[]
-
-    for example in batch:
-      input_vector=example[0]
-      target_vector=example[1]
-      output_vector=self._Model.Predict(input_vector)
-      neurons_loss,neurons_output=self._Model.Learn(target_vector-output_vector)
-      error_signals.append(neurons_loss)
-      output_values.append(neurons_output)
+    for mb in batch:
+      for example in mb:
+        input_vector=example[0]
+        target_vector=example[1]
+        output_vector=self._Model.Predict(input_vector)
+        neurons_loss,neurons_output=self._Model.Learn(target_vector-output_vector)
+        error_signals.append(neurons_loss)
+        output_values.append(neurons_output)
     
     
     for n in self._Model.GetAllOutputNeurons()+self._Model.GetAllHiddenNeurons():
@@ -67,15 +67,16 @@ class TrainPhase(Phase):
       outputs[i]=output_vector
       targets[i]=target_vector
     
-    loss_value= np.sum( (outputs-targets)@(outputs-targets)) * (1/BatchDimension)
+    loss_value= np.sum( (outputs-targets)@(outputs-targets)) * (1/epoch_size)
     self._Metrics["Loss"].append(loss_value)
     if conf_matrix:
-      self._Metrics["Precision"].append(precision/self._Dataset.size())
+      self._Metrics["Precision"].append(precision/epoch_size)
 
 class EvaluationPhase(Phase): 
-  def __init__(self, Model, DataSet,classification_function=lambda x:x):
+  def __init__(self, Model, DataSet,evaluation_function=lambda t,o: np.sum((t-o)**2),classification_function=lambda x:x):
     super().__init__(Model, DataSet)
     self._classification_function=classification_function
+    self._evaluation_function=evaluation_function
 
 
   def Work(self, BatchDimension,conf_matrix=False):
@@ -92,7 +93,8 @@ class EvaluationPhase(Phase):
       outputs[i]=output_vector
       targets[i]=target_vector
     
-    loss_value= np.sum( (outputs-targets)@(outputs-targets) )*(1/BatchDimension)
+    #loss_value= np.sum( (outputs-targets)@(outputs-targets) )*(1/BatchDimension)
+    loss_value= self._evaluation_function(targets,outputs)
     self._Metrics["Loss"].append(loss_value)
     if conf_matrix and self._Dataset.size()!=0:
       self._Metrics["Precision"].append(precision/self._Dataset.size())

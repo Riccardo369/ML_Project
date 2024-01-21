@@ -3,7 +3,7 @@ import numpy as np
 #Talke data from dataset file
 def TakeCupDataset(path):
   Data = np.genfromtxt(path, delimiter=',', skip_header = 7,dtype=np.longdouble)[:, 1:]
-  Result = [[i[:-3], i[-3:]] for i in Data]
+  Result = np.array([[i[:-3], i[-3:]] for i in Data],dtype=object)
   return Result
 
 class DataSet:
@@ -27,13 +27,15 @@ class DataSet:
     if index<0 or index>=self.__size:
       raise ValueError("index must be within dataset size")
     self.__batch_index=index
-  def next_batch(self,n):
-    result=np.array([ self.__data[(self.__batch_index+j)%self.__size] for j in range(n)],dtype=object)
-    self.__batch_index+=n
-    if self.__shuffle_dataset and self.__batch_index >= self.__size:
-      np.random.shuffle(self.__data)
-    self.__batch_index%=self.__size
-    return result
+  def next_epoch(self,n,take_rest=False):
+    batches=[]
+    i=0
+    while i < self.__size:
+      batches.append(self.__data[i:i+n])
+      i+=n
+    if take_rest and i > self.__size:
+      batches.append(self.__data[i-n:])
+    return batches
   def input_size(self):
     return self.__input_size
   def output_size(self):

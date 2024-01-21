@@ -8,8 +8,7 @@ class GridSearch:
         self._batch_size=batch_size
         self._grid=grid
         self._training_strategy=training_strategy
-    def search(self,classification_function,
-                    bias_update_function=lambda x:0):
+    def search(self,classification_function=lambda x:x):
         best_performance={
             "training":{"Loss":[np.inf],"Precision":[np.inf]},
             "validation":{"Loss":[np.inf],"Precision":[np.inf]},
@@ -41,6 +40,7 @@ class GridSearch:
                 final_learning_state=self._model.ExtractLearningState()
                 best_performance_index=i
                 best_performance=performance
+        self._model.LoadLearningState(InitialState)
         print(f"grid search done, bestmodel: np.{best_performance_index} with hyperparameters {self._grid[best_performance_index]}")
         return {
             "model_state": final_learning_state,

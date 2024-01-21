@@ -58,7 +58,93 @@ def BuildTwoLevelFeedForwardMonk(InputSize, HiddenSize, OutputSize, LossFunction
   
   return mlp
 
-def BuildTwoLevelFeedForwardMonk1(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0,classification_threshold=0):
+def build_monk1_MLP(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0,classification_threshold=0):
+  sigmoid= lambda x:1/(1+np.exp(-x))
+  mlp = MLP(0,0,LossFunction)
+  InputLayer = mlp.GetInputLayer()
+  for i in range(InputSize):
+    neuron=InputNeuron(lambda x:x,WeightsUpdateFunction,lambda x,y:0,LossFunction)
+    neuron.SetActivationDerivative(lambda x:1)
+    InputLayer.InsertNeuron(neuron,i)
+
+  for i in InputLayer: i.AddBridge(Bridge(None, i, 1))
+
+  OutputLayer = mlp.GetOutputLayer()  
+  for i in range(OutputSize):
+    neuron=OutputNeuron(lambda x:sigmoid(x) ,WeightsUpdateFunction,lambda x,y:0,LossFunction)
+    neuron.SetActivationDerivative(lambda x:sigmoid(x)*(1-sigmoid(x)))
+    OutputLayer.InsertNeuron(neuron,i)
+    
+  HiddenLayer1 = Layer(ActivationNeuron, HiddenSize, lambda x:x if x>=Threshold else 0, WeightsUpdateFunction, lambda x, y: 0, LossFunction)
+  for neuron in HiddenLayer1.GetNeurons():
+    neuron.SetActivationDerivative(lambda x:1 if x>=Threshold else 0) 
+ 
+  InputLayer.ConnectTo(HiddenLayer1)
+
+  HiddenLayer1.ConnectTo(OutputLayer) 
+      
+  mlp.CalculateAllStructure() 
+  
+  return mlp
+def build_monk2_MLP(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0,classification_threshold=0):
+  sigmoid= lambda x:1/(1+np.exp(-x))
+  mlp = MLP(0,0,LossFunction)
+  InputLayer = mlp.GetInputLayer()
+  for i in range(InputSize):
+    neuron=InputNeuron(lambda x:x,WeightsUpdateFunction,lambda x,y:0,LossFunction)
+    neuron.SetActivationDerivative(lambda x:1)
+    InputLayer.InsertNeuron(neuron,i)
+
+  for i in InputLayer: i.AddBridge(Bridge(None, i, 1))
+
+  OutputLayer = mlp.GetOutputLayer()  
+  for i in range(OutputSize):
+    neuron=OutputNeuron(lambda x:sigmoid(x) ,WeightsUpdateFunction,lambda x,y:0,LossFunction)
+    neuron.SetActivationDerivative(lambda x:sigmoid(x)*(1-sigmoid(x)))
+    OutputLayer.InsertNeuron(neuron,i)
+    
+  HiddenLayer1 = Layer(ActivationNeuron, HiddenSize, lambda x:x if x>=Threshold else 0, WeightsUpdateFunction, lambda x, y: 0, LossFunction)
+  for neuron in HiddenLayer1.GetNeurons():
+    neuron.SetActivationDerivative(lambda x:1 if x>=Threshold else 0) 
+ 
+  InputLayer.ConnectTo(HiddenLayer1)
+  #HiddenLayer1.ConnectTo(HiddenLayer2)
+
+  HiddenLayer1.ConnectTo(OutputLayer) 
+      
+  mlp.CalculateAllStructure() 
+  
+  return mlp
+def build_monk3_MLP(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0,classification_threshold=0):
+  sigmoid= lambda x:1/(1+np.exp(-x))
+  mlp = MLP(0,0,LossFunction)
+  InputLayer = mlp.GetInputLayer()
+  for i in range(InputSize):
+    neuron=InputNeuron(lambda x:x,WeightsUpdateFunction,lambda x,y:0,LossFunction)
+    neuron.SetActivationDerivative(lambda x:1)
+    InputLayer.InsertNeuron(neuron,i)
+
+  for i in InputLayer: i.AddBridge(Bridge(None, i, 1))
+
+  OutputLayer = mlp.GetOutputLayer()  
+  for i in range(OutputSize):
+    neuron=OutputNeuron(lambda x:sigmoid(x) ,WeightsUpdateFunction,lambda x,y:0,LossFunction)
+    neuron.SetActivationDerivative(lambda x:sigmoid(x)*(1-sigmoid(x)))
+    OutputLayer.InsertNeuron(neuron,i)
+    
+  HiddenLayer1 = Layer(ActivationNeuron, HiddenSize, lambda x:x if x>=Threshold else 0, WeightsUpdateFunction, lambda x, y: 0, LossFunction)
+  for neuron in HiddenLayer1.GetNeurons():
+    neuron.SetActivationDerivative(lambda x:1 if x>=Threshold else 0) 
+ 
+  InputLayer.ConnectTo(HiddenLayer1)
+  #HiddenLayer1.ConnectTo(HiddenLayer2)
+
+  HiddenLayer1.ConnectTo(OutputLayer) 
+      
+  mlp.CalculateAllStructure() 
+  
+  return mlp
+def build_CUP_MLP(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0,classification_threshold=0):
   sigmoid= lambda x:1/(1+np.exp(-x))
   mlp = MLP(0,0,LossFunction)
   InputLayer = mlp.GetInputLayer()
