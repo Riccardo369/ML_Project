@@ -12,7 +12,7 @@ class Holdout:
         training=TrainPhase(model,self._tr_dataset,classification_function)
         eval_func=lambda t,o:np.sum((o-t)@(o-t))*(1/self._vl_dataset.size())
         evaluation=EvaluationPhase(model,self._vl_dataset,eval_func,classification_function)
-        for epoch in range(300):
+        for epoch in range(500):
             training.Work(batch_size,True)
             evaluation.Work(batch_size,True)
             print("tr loss",training.GetMetrics()["Loss"][-1],"tr precision",training.GetMetrics()["Precision"][-1],epoch+1)

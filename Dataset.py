@@ -2,7 +2,7 @@ import numpy as np
 
 #Talke data from dataset file
 def TakeCupDataset(path):
-  Data = np.genfromtxt(path, delimiter=',', skip_header = 7,dtype=np.longdouble)[:, 1:]
+  Data = np.genfromtxt(path, delimiter=',', skip_header = 7,dtype=np.float64)[:, 1:]
   Result = np.array([[i[:-3], i[-3:]] for i in Data],dtype=object)
   return Result
 

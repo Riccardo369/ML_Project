@@ -24,9 +24,7 @@ class GridSearch:
             print(f"hyperparameters:{hyperparameters}")
             #set new hyperparameters
             def weights_update_function(weights,GradientLoss):
-                w=np.array(weights)
-                g=np.array(GradientLoss)
-                return w+(1/self._batch_size)*g*hyperparameters["learning_rate"]-hyperparameters["weight_decay"]*w
+                return weights+(1/self._batch_size)*GradientLoss*hyperparameters["learning_rate"]-hyperparameters["weight_decay"]*weights
             self._model.SetWeightsUpdateFunction(weights_update_function)
             def bias_update_function(old_bias,gradient_value):
                 return old_bias + (1/self._batch_size)*gradient_value*hyperparameters["learning_rate"]-hyperparameters["weight_decay"]*old_bias

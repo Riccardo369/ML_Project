@@ -44,7 +44,7 @@ dataset=Dataset.DataSet(Data,17,2)
 
 
 grid=parameter_grid.ParameterGrid({
-  "learning_rate":np.linspace(0.01,0.02,2),
+  "learning_rate":np.linspace(0.1,0.5,20),
   "weight_decay":np.array([0.0]),
 })
 
@@ -69,12 +69,15 @@ training_strategy=Holdout(dataset.get_dataset(),
                           tr_size)
 
 grid_search=GridSearch(Model,
-                      1,
+                      tr_size,
                       grid,
                       training_strategy
                       )
 
 result=grid_search.search(monk_classification)
+
+plot_model_performance(result["model_performance"],"red","blue","","final retraining performance of the best model")
+
 #Model.LoadLearningState(result["model_state"])
 
 best_params=grid[result["index"]]
@@ -90,8 +93,8 @@ def bias_update_function(old_bias,gradient_value):
   return old_bias + (1/dataset.size())*gradient_value*best_params["learning_rate"]-best_params["weight_decay"]*old_bias
 
 training=TrainPhase(Model,dataset,monk_classification)
-for epoch in range(300):
-    training.Work(1,True)
+for epoch in range(500):
+    training.Work(tr_size,True)
 
 plot_model_performance({"training":training.GetMetrics()},"red","blue","","final retraining performance of the best model")
 
@@ -116,5 +119,5 @@ def bias_update_function(old_bias,gradient_value):
 eval_func=lambda t,o:np.sum((o-t)@(o-t))*(1/ts_dataset.size())
 
 evaluation=EvaluationPhase(Model,ts_dataset,eval_func,monk_classification)
-evaluation.Work(1,True)
+evaluation.Work(ts_dataset.size(),True)
 print(f"final evaluation on the test set\naccuracy={evaluation.GetMetrics()["Precision"][-1]}\tloss value={evaluation.GetMetrics()["Loss"][-1]}")

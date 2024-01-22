@@ -11,8 +11,8 @@ class Bridge:
     self.__StartNeuron = StartNeuron
     self.__FinishNeuron = FinishNeuron
 
-    if(len(args) > 0): self.Weight = np.longdouble(args[0])                                   #Se il valore del peso è già scelto
-    else: self.Weight = np.longdouble(random.randint(-500, 500) / 1000)       #Valore scelto per convenienza da -1 ad 1 ma si può cambiare il range volendo
+    if(len(args) > 0): self.Weight = np.float64(args[0])                                   #Se il valore del peso è già scelto
+    else: self.Weight = np.float64(random.randint(-500, 500) / 1000)       #Valore scelto per convenienza da -1 ad 1 ma si può cambiare il range volendo
 
   def GetStartNeuron(self):
     return self.__StartNeuron

@@ -27,33 +27,7 @@ class TrainPhase(Phase):
     if(BatchDimension < 1 or BatchDimension > self._Dataset.size()): raise ValueError("batch dimension must be above 0 and lower or equal to the dataset dimension")
     batch=self._Dataset.next_epoch(BatchDimension)
     epoch_size=sum(map(len,batch))
-    error_signals=[]
-    output_values=[]
-    for mb in batch:
-      for example in mb:
-        input_vector=example[0]
-        target_vector=example[1]
-        output_vector=self._Model.Predict(input_vector)
-        neurons_loss,neurons_output=self._Model.Learn(target_vector-output_vector)
-        error_signals.append(neurons_loss)
-        output_values.append(neurons_output)
-    
-    
-    for n in self._Model.GetAllOutputNeurons()+self._Model.GetAllHiddenNeurons():
-      entering_neurons=map(lambda x:x.GetStartNeuron(),n.GetSetEnterBridge())
-      grad=[]
-      #error signal of the unit for each pattern
-      errors=np.array([ e[n] for e in error_signals ])
-      for en in entering_neurons:
-        grad.append((np.array( [o[en] for o in output_values ])@errors) )
-      new_weights=n.CalculateUpdatedWeights(grad)
-      for i,w in enumerate(n.GetSetEnterBridge()):
-        w.Weight=new_weights[i]
-
-      new_bias=n.CalculateUpdateBias(np.sum(errors))
-      n.BiasValue=new_bias
-
-
+    self._Model.Learn(batch)
     precision=0
     outputs=np.empty(self._Dataset.size(),dtype=object)
     targets=np.empty(self._Dataset.size(),dtype=object)

@@ -1,4 +1,6 @@
+import array
 import json
+import time
 import numpy as np
 from types import LambdaType
 import threading
@@ -95,7 +97,6 @@ class NeuralNetwork:
     self.__NeuronsLastOutput.clear()
 
   def Predict(self, InputVector):
-
     if(len(InputVector) != len(self.__InputNeuronVector)): raise ValueError(f"Input vector must be {len(self.__InputNeuronVector)}, but is {len(InputVector)}")
     self.Clear() #Clear data of count bridge and vectore neuron input
 
@@ -144,10 +145,10 @@ class NeuralNetwork:
         b.IncrementUsedCount()                                                                            #Updates Bridge's counter
 
       del NeuronsToActive[i]
-
+    end_t=time.time()
     return np.array(Result)
   
-  """   def Predict(self, InputVector):
+    """   def Predict(self, InputVector):
     
     def CalculationNeuron(neuron, Dict, EventsToWait, PersonalEventToActive, Lock):
       
@@ -188,8 +189,80 @@ class NeuralNetwork:
     for event in self.__NeuronEventThreads: self.__NeuronEventThreads[event].clear()
    
     return np.array([self.__NeuronsLastOutput[NeuronOutput] for NeuronOutput in self.__OutputNeuronVector])  """
-  
-  def Learn(self, LossValueVector):
+  # propagates a signal error from the output layer to the rest of the network
+  def BackPropagate(self, LossValueVector):
+    #Check length parameter
+    if(len(LossValueVector) != len(self.__OutputNeuronVector)): raise ValueError(f"{len(self.__OutputNeuronVector)} Output neurons but {len(LossValueVector)} loss values insert")
+    
+    #Save which neurons must be still updated
+
+    #Save all loss values of all neurons
+    NeuronsLoss = dict()
+    for i in self.GetAllNeurons(): NeuronsLoss[i] = None
+
+    #Calculate Signal error Sk for output neuron (k index of output neuron)
+    for k in enumerate(self.GetAllOutputNeurons()): 
+      NeuronsLoss[k[1]] = LossValueVector[k[0]] * k[1].CalculateActionDerivative()
+    
+    NeuronsToUpdate = self.__InputNeuronVector.GetNeurons() + self.__HiddenNeurons
+    #Index using for control list of neurons to still update
+    i = 0
+    #FIRST STEP: assign for each neuron (input and hidden) own signal error
+
+    #For each neuron to still update
+    while(len(NeuronsToUpdate) > 0):
+      
+      i %= len(NeuronsToUpdate)
+
+      ActualNeuron = NeuronsToUpdate[i]   #Choose neuron to analyze
+      
+      #Bridges to consider
+      Bridges = ActualNeuron.GetSetExitBridge()
+      #If actual neuron can't get own signal error
+      if(None in map(lambda w: NeuronsLoss[w.GetFinishNeuron()], Bridges)):
+        i += 1 
+        continue
+      
+      #Calculate Signal error Sj for hidden and input neuron (Actual neuron = neuron j, w is bridge to consider)
+      SignalError = sum(map(lambda w: w.Weight * NeuronsLoss[w.GetFinishNeuron()], Bridges)) * ActualNeuron.CalculateActionDerivative() 
+      
+      NeuronsLoss[ActualNeuron] = SignalError
+      
+      for w in Bridges: w.ResetUsedCount()
+      # remove neuron from the list
+      del NeuronsToUpdate[i]
+    #Extract all neurons to update
+    return NeuronsLoss,dict(self.__NeuronsLastOutput)
+  def Learn(self, Epoch):
+    mb_size=max(map(len,Epoch))
+    error_signals=np.empty(mb_size,dtype=object)
+    output_values=np.empty(mb_size,dtype=object)
+    for mb in Epoch:
+      error_signals.resize( len(mb) )
+      output_values.resize( len(mb) )
+      for p,example in enumerate(mb):
+        input_vector=example[0]
+        target_vector=example[1]
+        output_vector=self.Predict(input_vector)
+        neurons_loss,neurons_output=self.BackPropagate(target_vector-output_vector)
+        error_signals[p]=neurons_loss
+        output_values[p]=neurons_output
+      for n in self.__OutputNeuronVector.GetNeurons()+self.__HiddenNeurons:
+        entering_neurons=map(lambda x:x.GetStartNeuron(),n.GetSetEnterBridge())
+        grad=[]
+        #error signal of the unit for each pattern
+        errors=np.array([ e[n] for e in error_signals ])
+        ov_mat=[]
+        for en in entering_neurons:
+          ov_mat.append( [o[en] for o in output_values ])
+        grad=np.array(ov_mat)@errors
+        new_weights=n.CalculateUpdatedWeights(grad)
+        for i,w in enumerate(n.GetSetEnterBridge()):
+          w.Weight=new_weights[i]
+        new_bias=n.CalculateUpdateBias(np.sum(errors))
+        n.BiasValue=new_bias
+
+  """ def Learn(self, LossValueVector):
     #Check length parameter
     if(len(LossValueVector) != len(self.__OutputNeuronVector)): raise ValueError(f"{len(self.__OutputNeuronVector)} Output neurons but {len(LossValueVector)} loss values insert")
     
@@ -231,8 +304,8 @@ class NeuralNetwork:
       # remove neuron from the list
       del NeuronsToUpdate[i]
     #Extract all neurons to update
-    return NeuronsLoss,dict(self.__NeuronsLastOutput)
-    """ for Neuron in self.GetAllOutputNeurons()+self.GetAllHiddenNeurons():
+    return NeuronsLoss,dict(self.__NeuronsLastOutput) 
+ for Neuron in self.GetAllOutputNeurons()+self.GetAllHiddenNeurons():
       #Update bias
       Neuron.BiasValue = Neuron.CalculateUpdateBias(NeuronsLoss[Neuron]) 
 
@@ -270,7 +343,7 @@ class NeuralNetwork:
     
     #for x, y in zip(OutputCalculatedVector, OutputTargetVector): print(self.__LambdaLossFunctionEvaluation(*self.__BeforeLambdaLossFunctionEvaluation(x, y)))
     
-    return np.longdouble(sum(map(lambda x, y: self.__LambdaLossFunctionEvaluation(*self.__BeforeLambdaLossFunctionEvaluation(x, y)), OutputCalculatedVector, OutputTargetVector)) / len(OutputCalculatedVector))
+    return np.float64(sum(map(lambda x, y: self.__LambdaLossFunctionEvaluation(*self.__BeforeLambdaLossFunctionEvaluation(x, y)), OutputCalculatedVector, OutputTargetVector)) / len(OutputCalculatedVector))
 
   def GradientDirectionLoss(self, OutputCalculated, OutputTarget):
     
@@ -279,7 +352,7 @@ class NeuralNetwork:
     #print(OutputCalculated, OutputTarget)
     OutputCalculated, OutputTarget = self.__BeforeGradientLossFunction(OutputCalculated, OutputTarget)
     #print(OutputCalculated, OutputTarget)
-    Result = np.longdouble(self.__GradientLossFunction(OutputCalculated, OutputTarget))
+    Result = np.float64(self.__GradientLossFunction(OutputCalculated, OutputTarget))
     #print(Result)
     #print("")
     
