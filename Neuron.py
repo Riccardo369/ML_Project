@@ -13,7 +13,8 @@ class Neuron:
     CheckParametersFunction(UpdateWeightsFunction, 2)
     CheckParametersFunction(BiasUpdateFunction, 2)
     CheckParametersFunction(LossFunction, 2)
-
+    self._NetBridges=[]
+    self._OutputBridges=[]
     self._Bridges = []  #Lista che contiene i ponti in uscita (per la feedforward) ed  i ponti in entrata (per la backpropagation)
     self._InputVector = np.array([]) #Lista degl' input che il neurone può avere
 
@@ -36,13 +37,13 @@ class Neuron:
     
     self.__BeforeGradientLossFunction = lambda x, y: (x, y)
 
-  def CalculateUpdatedWeights(self, LossGradientValue):
+  def CalculateUpdatedWeights(self, LossGradientValue,OldGradientValue):
     LossGradientValue, NeuronOutputs = self.__BeforeUpdateWeightsFunction(LossGradientValue,[])
-    return np.float64(self.__UpdateWeightsFunction(np.fromiter(map(lambda r: r.Weight, self.GetSetEnterBridge()),dtype=np.float64), LossGradientValue))
+    return np.float64(self.__UpdateWeightsFunction(np.fromiter(map(lambda r: r.Weight, self.GetSetEnterBridge()),dtype=np.float64), LossGradientValue,OldGradientValue))
 
-  def CalculateUpdateBias(self, LossGradientValue):
+  def CalculateUpdateBias(self, LossGradientValue,old_bias):
     LossGradientValue = self.__BeforeUpdateBiasFunction(LossGradientValue)
-    return np.float64(self.__UpdateBiasFunction(self.BiasValue, LossGradientValue))
+    return np.float64(self.__UpdateBiasFunction(self.BiasValue, LossGradientValue,old_bias))
 
   def CalculateLoss(self, CalculatedOutput, TargetOutput):
     CalculatedOutput, TargetOutput = self.__BeforeLossFunction(CalculatedOutput, TargetOutput)
@@ -53,11 +54,11 @@ class Neuron:
     return np.float64(self._GradientLossFunction(CalculatedOutput, TargetOutput))
 
   def SetUpdateWeightsFunction(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
+    CheckParametersFunction(Function, 3)
     self.__UpdateWeightsFunction = Function
 
   def SetUpdateBiasFunction(self, Function: LambdaType):
-    CheckParametersFunction(Function, 2)
+    CheckParametersFunction(Function, 3)
     self.__UpdateBiasFunction = Function
 
   def SetLossFunction(self, Function: LambdaType):
@@ -122,40 +123,50 @@ class Neuron:
 
   def AddBridge(self, b):
     self._Bridges.append(b)
-    self._InputVector = np.append(self._InputVector, None)
+    if b.GetFinishNeuron() == self:
+      self._InputVector = np.append(self._InputVector, None)
+      self._NetBridges.append(b)
+    if b.GetStartNeuron() == self:
+      self._OutputBridges.append(b)
 
   def RemoveBridge(self, b):
-    i = self.GetSetEnterBridge().index(b)
+    i = self._Bridges.index(b)
     self._Bridges.remove(b)
+
+    self._NetBridges.remove(b)
+    self._OutputBridges.remove(b)
+
     self._InputVector = np.delete(self._InputVector, i)
 
   def AddConnectionTo(self, FinalNeuron):
     if(self.GetExitBridgeToNeuron(FinalNeuron) != None): return False   #Se l' arco esiste già
     CreatedBridge = Bridge.Bridge(self, FinalNeuron)
-    self._Bridges.append(CreatedBridge)
+    self.AddBridge(CreatedBridge)
     FinalNeuron.AddBridge(CreatedBridge)
     return True
 
   def RemoveConnectionTo(self, FinalNeuron):
     if(self.GetExitBridgeToNeuron(FinalNeuron) == None): return False   #Se l' arco non esiste ma dovrebbe esistere
     CreatedBridge = Bridge.Bridge(self, FinalNeuron)
-    self._Bridges.remove(CreatedBridge)
+    self.RemoveBridge(CreatedBridge)
     FinalNeuron.RemoveBridge(CreatedBridge)
     return True
 
   def GetEnterBridgeFromNeuron(self, StartNeuron):
-    try: return list(filter(lambda x: x.GetStartNeuron() == StartNeuron and x.GetFinishNeuron() == self, self._Bridges))[0]
-    except: return None
+    try: 
+      return list(filter(lambda x: x.GetStartNeuron() == StartNeuron and x.GetFinishNeuron() == self, self._Bridges))[0]
+    except: 
+      return None
 
   def GetExitBridgeToNeuron(self, FinalNeuron):
     try: return list(filter(lambda x: x.GetStartNeuron() == self and x.GetFinishNeuron() == FinalNeuron, self._Bridges))[0]
     except: return None
 
   def GetSetEnterBridge(self):
-    return list(filter(lambda i: self == i.GetFinishNeuron(), self._Bridges))
+    return self._NetBridges
 
   def GetSetExitBridge(self):
-    return list(filter(lambda i: self == i.GetStartNeuron(), self._Bridges))
+    return self._OutputBridges
 
   def Calculate(self):
     raise NotImplemented

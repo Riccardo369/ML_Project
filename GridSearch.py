@@ -23,11 +23,11 @@ class GridSearch:
             hyperparameters=self._grid[i]
             print(f"hyperparameters:{hyperparameters}")
             #set new hyperparameters
-            def weights_update_function(weights,GradientLoss):
-                return weights+(1/self._batch_size)*GradientLoss*hyperparameters["learning_rate"]-hyperparameters["weight_decay"]*weights
+            def weights_update_function(weights,GradientLoss,OldGradientValue):
+                return weights+(1/self._batch_size)*GradientLoss*hyperparameters["learning_rate"]-hyperparameters["weight_decay"]*weights+ hyperparameters["momentum"]*OldGradientValue
             self._model.SetWeightsUpdateFunction(weights_update_function)
-            def bias_update_function(old_bias,gradient_value):
-                return old_bias + (1/self._batch_size)*gradient_value*hyperparameters["learning_rate"]-hyperparameters["weight_decay"]*old_bias
+            def bias_update_function(old_bias,gradient_value,old_gradient_value):
+                return old_bias + (1/self._batch_size)*gradient_value*hyperparameters["learning_rate"]-hyperparameters["weight_decay"]*old_bias+ hyperparameters["momentum"]*old_gradient_value
             for n in self._model.GetAllNeurons():
                 n.SetUpdateBiasFunction(bias_update_function)
             #TODO aggiornamento della bias

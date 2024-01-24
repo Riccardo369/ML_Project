@@ -77,10 +77,7 @@ def convert_to_one_hot(features_names,target_names,encoding,data):
     encodings=[]
     for i,input_feature in enumerate(features_names):
         encodings.append(encoding[input_feature][input_value[i]])
-    targets=[]
-    for i,target_feature in enumerate(target_names):
-        targets.append(encoding[target_feature][target[i]])
-    result.append([np.concatenate(encodings),np.concatenate(targets)])
+    result.append([np.concatenate(encodings),np.array(target)])
   return result
 
 def encode_dataset_to_one_hot(features):

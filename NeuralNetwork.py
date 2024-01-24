@@ -234,9 +234,17 @@ class NeuralNetwork:
     #Extract all neurons to update
     return NeuronsLoss,dict(self.__NeuronsLastOutput)
   def Learn(self, Epoch):
+    
+    old_grad=dict()
+    old_bias_grad=dict()
+
+
     mb_size=max(map(len,Epoch))
     error_signals=np.empty(mb_size,dtype=object)
     output_values=np.empty(mb_size,dtype=object)
+    for n in self.GetAllNeurons():
+      old_grad[n]= np.zeros(len(n.GetSetEnterBridge()))
+      old_bias_grad[n]=0.0
     for mb in Epoch:
       error_signals.resize( len(mb) )
       output_values.resize( len(mb) )
@@ -249,18 +257,20 @@ class NeuralNetwork:
         output_values[p]=neurons_output
       for n in self.__OutputNeuronVector.GetNeurons()+self.__HiddenNeurons:
         entering_neurons=map(lambda x:x.GetStartNeuron(),n.GetSetEnterBridge())
-        grad=[]
         #error signal of the unit for each pattern
         errors=np.array([ e[n] for e in error_signals ])
         ov_mat=[]
         for en in entering_neurons:
           ov_mat.append( [o[en] for o in output_values ])
         grad=np.array(ov_mat)@errors
-        new_weights=n.CalculateUpdatedWeights(grad)
+        new_weights=n.CalculateUpdatedWeights(grad,old_grad[n])
         for i,w in enumerate(n.GetSetEnterBridge()):
           w.Weight=new_weights[i]
-        new_bias=n.CalculateUpdateBias(np.sum(errors))
+        bias_grad=np.sum(errors)
+        new_bias=n.CalculateUpdateBias(bias_grad,old_bias_grad[n])
         n.BiasValue=new_bias
+        old_grad[n]=grad
+        old_bias_grad[n]=bias_grad
 
   """ def Learn(self, LossValueVector):
     #Check length parameter
