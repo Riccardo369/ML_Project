@@ -8,26 +8,24 @@ import numpy as np
 #Responsabilità, rappresentare un neurone tenendo conto degl' archi di uscita, di entrata e della bias, in più calcolare la propria funzione di attivazione
 class Neuron:
 
-  def __init__(self, UpdateWeightsFunction: LambdaType, BiasUpdateFunction: LambdaType, LossFunction: LambdaType, *args):
+  def __init__(self, UpdateWeightsFunction: LambdaType, LossFunction: LambdaType, *args):
 
     CheckParametersFunction(UpdateWeightsFunction, 2)
-    CheckParametersFunction(BiasUpdateFunction, 2)
     CheckParametersFunction(LossFunction, 2)
-    self._NetBridges=[]
-    self._OutputBridges=[]
-    self._Bridges = []  #Lista che contiene i ponti in uscita (per la feedforward) ed  i ponti in entrata (per la backpropagation)
-    self._InputVector = np.array([]) #Lista degl' input che il neurone può avere
+    
+    self._InputBridges = []
+    self._OutputBridges = []
+    
+    self._InputVector = np.array([1]) #Lista degl' input che il neurone può avere, già inserito l' input della bias
+    
+    #Bias già inserita, la bias non è altro che un altro peso aggiuntivo, con input fisso a 1
+    if(len(args) > 0): self._Weights = np.array([args[0]])
+    else: self._Weights = np.array([random.randint(-10, 10)/100])
 
     self.__ActivedState = True
 
-    if(len(args) > 0): self.BiasValue = np.float64(args[0])                        #Se la nostra bias è già scelta
-    else: self.BiasValue = np.float64(random.randint(-1000, 1000) / 1000)        #Valore scelto per convenienza da -10 ad 10 ma si può cambiare il range volendo
-
     self.__UpdateWeightsFunction = UpdateWeightsFunction
     self.__BeforeUpdateWeightsFunction = lambda x, y: (x, y)
-
-    self.__UpdateBiasFunction = BiasUpdateFunction
-    self.__BeforeUpdateBiasFunction = lambda x: x
 
     self.__LossFunction = LossFunction
     self.__BeforeLossFunction = lambda x, y: (x, y)
@@ -36,14 +34,11 @@ class Neuron:
     except: self._GradientLossFunction = lambda x, y: 1
     
     self.__BeforeGradientLossFunction = lambda x, y: (x, y)
-
-  def CalculateUpdatedWeights(self, LossGradientValue,OldGradientValue):
-    LossGradientValue, NeuronOutputs = self.__BeforeUpdateWeightsFunction(LossGradientValue,[])
-    return np.float64(self.__UpdateWeightsFunction(np.fromiter(map(lambda r: r.Weight, self.GetSetEnterBridge()),dtype=np.float64), LossGradientValue,OldGradientValue))
-
-  def CalculateUpdateBias(self, LossGradientValue,old_bias):
-    LossGradientValue = self.__BeforeUpdateBiasFunction(LossGradientValue)
-    return np.float64(self.__UpdateBiasFunction(self.BiasValue, LossGradientValue,old_bias))
+    
+  #Implementazione intersecata con l' algoritmo di aggiornamento di momentum 
+  def CalculateUpdatedWeights(self, LossGradientValue, OldGradientValue):
+    LossGradientValue, NeuronOutputs = self.__BeforeUpdateWeightsFunction(LossGradientValue, [])
+    return np.float64(self.__UpdateWeightsFunction(self._Weights, LossGradientValue, OldGradientValue))
 
   def CalculateLoss(self, CalculatedOutput, TargetOutput):
     CalculatedOutput, TargetOutput = self.__BeforeLossFunction(CalculatedOutput, TargetOutput)
@@ -57,10 +52,6 @@ class Neuron:
     CheckParametersFunction(Function, 3)
     self.__UpdateWeightsFunction = Function
 
-  def SetUpdateBiasFunction(self, Function: LambdaType):
-    CheckParametersFunction(Function, 3)
-    self.__UpdateBiasFunction = Function
-
   def SetLossFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
     self.__LossFunction = Function
@@ -73,10 +64,6 @@ class Neuron:
   def SetBeforeUpdateWeightsFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
     self.__BeforeUpdateWeightsFunction = Function
-
-  def SetBeforeUpdateBiasFunction(self, Function: LambdaType):
-    CheckParametersFunction(Function, 1)
-    self.__BeforeUpdateBiasFunction = Function
 
   def SetBeforeLossFunction(self, Function: LambdaType):
     CheckParametersFunction(Function, 2)
@@ -97,76 +84,76 @@ class Neuron:
 
   def GetInputVector(self):
     return list(self._InputVector)
+  
+  def GetBiasValue(self):
+    return self._Weights[0]
+  
+  def GetWeightsVector(self):
+    return list(self._Weights)
 
   def ResetInputVector(self):
-    self._InputVector = [None for _ in self._InputVector]
-
+    Bias = self._InputVector[0]
+    self._InputVector[:] = None
+    self._InputVector[0] = Bias
+    
+  def LoadWeights(self, WeightsVector):
+    if(len(WeightsVector) != len(self._Weights)): return False
+    for i, Weight in enumerate(WeightsVector): self._Weights[i] = Weight
+    return True
+  
   def LoadInputFromBridge(self, b, x):
     
-    try:
-      
-      EnterBridgeList = self.GetSetEnterBridge()
-      
-      #print(EnterBridgeList, hex(id(b)))
-      #print(b)
-      
-      #print(np.where(EnterBridgeList == b))
-      i = np.where(np.array(EnterBridgeList) == b)[0][0]
-      
-      #i = np.argmax(EnterBridgeList == b)
-      #print(f"i = {i}")
-      SelectedBridge = EnterBridgeList[i]
-      self._InputVector[i] = SelectedBridge.Weight * x
-      return True
+    if(b not in self._InputBridges): return False
+    self._InputVector[b.GetIndexNeuron()] = x
+    return True
+  
+  def AddEnterBridge(self, b):
     
-    except: return False
-
-  def AddBridge(self, b):
-    self._Bridges.append(b)
-    if b.GetFinishNeuron() == self:
-      self._InputVector = np.append(self._InputVector, None)
-      self._NetBridges.append(b)
-    if b.GetStartNeuron() == self:
-      self._OutputBridges.append(b)
-
-  def RemoveBridge(self, b):
-    i = self._Bridges.index(b)
-    self._Bridges.remove(b)
-
-    self._NetBridges.remove(b)
-    self._OutputBridges.remove(b)
-
-    self._InputVector = np.delete(self._InputVector, i)
+    self._InputBridges.append(b)
+    self._InputVector = np.append(self._InputVector, None)
+    self._Weights = np.append(self._Weights, random.randint(-10, 10)/100)
+    
+  def RemoveEnterBridge(self, b):
+    
+    self._InputBridges.remove(b)
+    self._InputVector = np.remove(self._InputVector, b.GetIndexNeuron())
+    self._Weights = np.remove(self._Weights, b.GetIndexNeuron())
 
   def AddConnectionTo(self, FinalNeuron):
+    
     if(self.GetExitBridgeToNeuron(FinalNeuron) != None): return False   #Se l' arco esiste già
-    CreatedBridge = Bridge.Bridge(self, FinalNeuron)
-    self.AddBridge(CreatedBridge)
-    FinalNeuron.AddBridge(CreatedBridge)
+    
+    Arc = Bridge.Bridge(self, FinalNeuron, len(FinalNeuron.GetSetEnterBridge()))
+    
+    self._OutputBridges.append(Arc)
+    FinalNeuron.AddEnterBridge(Arc)
+    
     return True
 
-  def RemoveConnectionTo(self, FinalNeuron):
-    if(self.GetExitBridgeToNeuron(FinalNeuron) == None): return False   #Se l' arco non esiste ma dovrebbe esistere
-    CreatedBridge = Bridge.Bridge(self, FinalNeuron)
-    self.RemoveBridge(CreatedBridge)
-    FinalNeuron.RemoveBridge(CreatedBridge)
+  def RemoveConnectionTo(self, FinalNeuron): 
+    
+    Arc = self.GetExitBridgeToNeuron(FinalNeuron)  
+    
+    if(Arc == None): return False   #Se l' arco non esiste ma dovrebbe esistere 
+    
+    self._OutputBridges.remove(Arc) 
+    FinalNeuron.RemoveEnterBridge(Arc)
+    
     return True
 
   def GetEnterBridgeFromNeuron(self, StartNeuron):
-    try: 
-      return list(filter(lambda x: x.GetStartNeuron() == StartNeuron and x.GetFinishNeuron() == self, self._Bridges))[0]
-    except: 
-      return None
+    try: return list(filter(lambda x: x.GetStartNeuron() == StartNeuron, self._InputBridges))[0]
+    except: return None
 
   def GetExitBridgeToNeuron(self, FinalNeuron):
-    try: return list(filter(lambda x: x.GetStartNeuron() == self and x.GetFinishNeuron() == FinalNeuron, self._Bridges))[0]
+    try: return list(filter(lambda x: x.GetFinishNeuron() == FinalNeuron, self._OutputBridges))[0]
     except: return None
 
   def GetSetEnterBridge(self):
-    return self._NetBridges
+    return list(self._InputBridges)
 
   def GetSetExitBridge(self):
-    return self._OutputBridges
+    return list(self._OutputBridges)
 
   def Calculate(self):
     raise NotImplemented
@@ -175,7 +162,7 @@ class Neuron:
     return self is obj
 
   def __str__(self):
-    return f"Neuron ({self.BiasValue})"
+    return f"Neuron ({self._Weights[0]})"
 
   def __hash__(self):
     return id(self)
@@ -183,14 +170,15 @@ class Neuron:
 #Responsabilità, rappresentare un neurone tenendo conto degl' archi di uscita, di entrata e della bias, in più calcolare la propria funzione di attivazione
 class ActivationNeuron(Neuron):
 
-  def __init__(self, ActivationFunction: LambdaType, UpdateWeightsFunction: LambdaType, BiasUpdateFunction: LambdaType, LossFunction: LambdaType, *args):
-    super().__init__(UpdateWeightsFunction, BiasUpdateFunction, LossFunction, *args)
+  def __init__(self, ActivationFunction: LambdaType, UpdateWeightsFunction: LambdaType, LossFunction: LambdaType, *args):
+    super().__init__(UpdateWeightsFunction, LossFunction, *args)
 
     CheckParametersFunction(ActivationFunction, 1)
     self._ActivationFunction = ActivationFunction
     
     try: self._ActivationDerative = DerivationLambda(self._ActivationFunction, 0)
     except: self._ActivationDerative = lambda x: 1
+    
   def SetActivationDerivative(self, Function):
     CheckParametersFunction(Function, 1)
     self._ActivationDerivative = Function
@@ -204,33 +192,26 @@ class ActivationNeuron(Neuron):
     self._ActivationFunction = Function
     
   def CalculateActionDerivative(self):
-    return self._ActivationDerivative(sum(self._InputVector) + self.BiasValue)
+    return self._ActivationDerivative(self._Net)
   
   def CalculateDerivationLoss(self):
-    #print(sum(self._InputVector) + self.BiasValue)
-    return self._GradientLossFunction(sum(self._InputVector) + self.BiasValue)
+    return self._GradientLossFunction(self._Net)
     
   def Calculate(self):
     if(not self.GetStateActived()):  return 0
-
-    Net = np.sum(self._InputVector) + self.BiasValue
-    return self._ActivationFunction(Net)
+    
+    self._Net = np.dot(self._InputVector, self._Weights)
+    return self._ActivationFunction(self._Net)
 
 class InputNeuron(ActivationNeuron):
-  def __init__(self,ActivationFunction:LambdaType,UpdateWeightsFunction: LambdaType,BiasUpdateFunction:LambdaType,LossFunction:LambdaType):
-    super().__init__(ActivationFunction, UpdateWeightsFunction,BiasUpdateFunction,LossFunction, 0) 
+  def __init__(self, ActivationFunction: LambdaType, UpdateWeightsFunction: LambdaType, LossFunction: LambdaType):
+    super().__init__(ActivationFunction, UpdateWeightsFunction, LossFunction, 0) 
     
 class OutputNeuron(ActivationNeuron):
-  def __init__(self,ActivationFunction:LambdaType,UpdateWeightsFunction: LambdaType,BiasUpdateFunction:LambdaType,LossFunction:LambdaType):
-    super().__init__(ActivationFunction, UpdateWeightsFunction,BiasUpdateFunction,LossFunction, 0)
+  def __init__(self,ActivationFunction: LambdaType, UpdateWeightsFunction: LambdaType, LossFunction: LambdaType):
+    super().__init__(ActivationFunction, UpdateWeightsFunction, LossFunction, 0)
     
 class Perceptron(ActivationNeuron):
-  def __init__(self, threshold, UpdateWeightsFunction: LambdaType, BiasUpdateFunction: LambdaType, LossFunction: LambdaType, *args):
-    self.__Threshold = threshold
-    super().__init__(lambda x: x if x >= self.__Threshold else 0, UpdateWeightsFunction, BiasUpdateFunction, LossFunction, *args)
-
-  def GetThreshold(self):
-    return self.__Threshold
-
-  def SetThreshold(self, x):
-    self.__Threshold = x
+  def __init__(self, threshold, UpdateWeightsFunction: LambdaType, LossFunction: LambdaType, *args):
+    self.Threshold = threshold
+    super().__init__(lambda x: x if x >= self.Threshold else 0, UpdateWeightsFunction, LossFunction, *args)
