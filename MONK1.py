@@ -53,14 +53,14 @@ ts_dataset=Dataset.DataSet(Data,17,1)
 #print(f"performing grid search on {len(grid.get_parameters())} hyperparameters with {grid.get_size()} combinations")
 print(f"using a data set with {dataset.size()} examples, {dataset.input_size()} input features and {dataset.output_size()} output features")
 
-Model=build_monk1_MLP(17, 4, 1, lambda op, tp: (op-tp)**2, lambda x, y: 0)
+Model=build_monk1_MLP(17, 5, 1, lambda op, tp: (op-tp)**2, lambda x, y: 0)
 for n in Model.GetAllNeurons():
   n.BiasValue=0
 for n in Model.GetAllHiddenNeurons():
   hidden_neuron_net=n.GetSetEnterBridge()
   fan_in=len(hidden_neuron_net)
   for w in hidden_neuron_net:
-    w.Weight= np.std(np.random.uniform(-(1/np.sqrt(fan_in)),(1/np.sqrt(fan_in))))
+    w.Weight= np.random.normal(np.random.uniform(-(1/np.sqrt(fan_in)),(1/np.sqrt(fan_in))))
 Model.SetBeforeLossFunctionEvaluation(lambda op, tp: ( ((op[0]-tp[0])**2), 0))
 InitialState=Model.ExtractLearningState()
 #split dataset
@@ -73,9 +73,9 @@ simulator=Simulator(
   vl_dataset=ts_dataset,
   batch_size=1,
   grid=parameter_grid.ParameterGrid({
-    "learning_rate":np.array([0.2]),
+    "learning_rate":np.array([0.1]),
     "weight_decay":np.array([0]),
-    "momentum":np.array([0.4]),
+    "momentum":np.array([0.02]),
   }),
   training_strategy=Holdout(
                           tr_data=dataset.get_dataset(),
