@@ -13,7 +13,8 @@ class FFNeuralNetwork:
         for layer in self._hidden_layers: 
             layer.update(learning_rate,momentum,weight_decay,batch_size)
         self._output_layer.update(learning_rate,momentum,weight_decay,batch_size)
-        
+    def dump():
+        learning_state=dict(input=None,hidden=[],output=None)
 
     def predict(self,input_value):
         self.forward(input_value)
@@ -31,15 +32,15 @@ class FFNeuralNetwork:
                                                       weight_decay
                                                       )
         weights=self._output_layer.get_weights()
-        for i,layer in reversed(self._hidden_layers[1:]):
-            signal_errors=layer.backward(signal_errors,
+        for i in range(len(self._hidden_layers)-1,0,-1):
+            signal_errors=self._hidden_layers[i].backward(signal_errors,
                                              self._hidden_layers[i-1].get_output(),
                                              weights,
                                              learning_rate,
                                              momentum,
                                              weight_decay
                                              )
-            weights=layer.get_weights()
+            weights=self._hidden_layers[i].get_weights()
         signal_errors=self._hidden_layers[0].backward(signal_errors,
                                                           self._input_layer.get_output(),
                                                           weights,

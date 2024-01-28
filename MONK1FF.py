@@ -49,6 +49,7 @@ nn=FFNeuralNetwork(
     InputLayer(17,np.eye(17),lambda x:x,lambda x:1),
     [
         Layer(5,np.random.rand(5,17)*0.5),
+        Layer(5,np.random.rand(5,5)*0.5),
     ],
     OutputLayer(1,np.random.rand(1,5),sigmoid,sigmoid_prime)
 )
@@ -61,7 +62,7 @@ validation_performance_prec=[]
 training_performance_prec=[]
 
 for epoch in range(600):
-    nn.fit(dataset.get_dataset(),0.5,0.0,0.8,dataset.size())
+    nn.fit(dataset.get_dataset(),0.6,0.0,0.3,dataset.size())
 
     tr_loss,tr_prec=evaluate_performance(nn,dataset,mse_loss,monk_classification)
     vl_loss,vl_prec=evaluate_performance(nn,ts_dataset,mse_loss,monk_classification)

@@ -27,6 +27,19 @@ class AbstractLayer:
 
         self._activation_function=activation_function 
         self._activation_function_derivative= activation_function_derivative
+    def dump(self):
+        res=dict()
+        for k,v in vars(self).items():
+            if isinstance(v,np.ndarray):
+                res[k]=np.copy(v)
+            else:
+                res[k]=v
+        return res
+    def load(self,state):
+
+        raise NotImplemented
+
+
     def reset_grad(self):
         self._weights_grad.fill(0)
         self._bias_grad.fill(0)
