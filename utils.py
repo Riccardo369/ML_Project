@@ -1,7 +1,6 @@
 import numpy as np
 
-
-def k_fold(dataset,k):
+def k_fold(dataset, k):
     folds=np.array_split(np.array(dataset,dtype=object),k)
     result=[]
     for i in range(k):
@@ -10,7 +9,7 @@ def k_fold(dataset,k):
         result.append((tr,vl))
     return result
 
-
+#Evaluate performance measures of model on a dataset
 def evaluate_performance(model,dataset,loss_function,classification_function):
     outputs=[]
     targets=[]

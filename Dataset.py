@@ -1,5 +1,15 @@
 import numpy as np
 
+monk_features={
+  "a1":[1,2,3],
+  "a2":[1,2,3],
+  "a3":[1,2],
+  "a4":[1,2,3],
+  "a5":[1,2,3,4],
+  "a6":[1,2],
+  "class":[0,1]
+}
+
 # Take data from dataset file
 def TakeCupDataset(path):
     Data = np.genfromtxt(path, delimiter=',', skip_header=7, dtype=np.float64)[:, 1:]

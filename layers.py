@@ -27,6 +27,7 @@ class AbstractLayer:
 
         self._activation_function=activation_function 
         self._activation_function_derivative= activation_function_derivative
+        
     def dump(self):
         res=dict()
         for k,v in vars(self).items():
@@ -35,6 +36,7 @@ class AbstractLayer:
             else:
                 res[k]=v
         return res
+    
     def load(self,state):
         for k,v in state.items():
             setattr(self,k,v)
