@@ -6,7 +6,7 @@ import sympy as sp
 def CheckParametersFunction(Function, n):
   if(Function.__code__.co_argcount != n): raise ValueError(f"This function has {n} parameters, but it has {Function.__code__.co_argcount} arguments")
 
-#This function take lambda function with more variables and get own derivate function, with one variable
+#This function takes lambda function with more variables and get own derivate function, with one variable
 def DerivationLambda(Lambda, i):
   VariablesName = Lambda.__code__.co_varnames[:Lambda.__code__.co_argcount]
   Variables = sp.symbols(' '.join(map(str, VariablesName)))

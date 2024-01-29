@@ -7,7 +7,7 @@ from Neuron import ActivationNeuron, InputNeuron, Neuron, OutputNeuron, Perceptr
 def tanh_function(z):
     return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
 
-
+#Creation of model
 def BuildTwoLevelFeedForward(InputSize, HiddenSize, OutputSize, LossFunction, WeightsUpdateFunction,Threshold=0):
   mlp = MLP(0,0,LossFunction)
   InputLayer = mlp.GetInputLayer()
