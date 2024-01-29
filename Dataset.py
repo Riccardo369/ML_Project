@@ -87,3 +87,13 @@ def encode_dataset_to_one_hot(features):
     features_encoding[k]=one_hot_encoding(v)
   
   return features_encoding
+
+monk_features={
+  "a1":[1,2,3],
+  "a2":[1,2,3],
+  "a3":[1,2],
+  "a4":[1,2,3],
+  "a5":[1,2,3,4],
+  "a6":[1,2],
+  "class":[0,1]
+}

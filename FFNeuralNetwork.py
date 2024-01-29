@@ -13,9 +13,18 @@ class FFNeuralNetwork:
         for layer in self._hidden_layers: 
             layer.update(learning_rate,momentum,weight_decay,batch_size)
         self._output_layer.update(learning_rate,momentum,weight_decay,batch_size)
-    def dump():
-        learning_state=dict(input=None,hidden=[],output=None)
-
+    def dump(self):
+        return {
+            'input_layer':self._input_layer.dump(),
+            'hidden_layers':[ layer.dump() for layer in self._hidden_layers ],
+            'output_layer':self._output_layer.dump(),
+        }
+    def load(self,state):
+        self._input_layer.load(state['input_layer'])
+        for hidden_layer,layer_state in zip(self._hidden_layers,state['hidden_layers']):
+            hidden_layer.load(layer_state)
+        self._output_layer.load(state['output_layer'])
+        self._layers_number=2+len(self._hidden_layers)
     def predict(self,input_value):
         self.forward(input_value)
         return self._output_layer.get_output()

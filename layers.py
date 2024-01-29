@@ -17,9 +17,9 @@ class AbstractLayer:
         self._biases_momentum=np.zeros(layer_dim,dtype=np.longdouble)
         self._weights_momentum=np.zeros(weights.shape,dtype=np.longdouble)
 
-        self._input_nets=np.empty(layer_dim,dtype=np.longdouble)
-        self._neurons_output=np.empty(layer_dim,dtype=np.longdouble)
-        self._error_signals=np.empty(layer_dim,dtype=np.longdouble)
+        self._input_nets=np.zeros(layer_dim,dtype=np.longdouble)
+        self._neurons_output=np.zeros(layer_dim,dtype=np.longdouble)
+        self._error_signals=np.zeros(layer_dim,dtype=np.longdouble)
         self._weights_mat=weights
 
         self._weights_grad=np.zeros(weights.shape,dtype=np.longdouble)
@@ -36,8 +36,8 @@ class AbstractLayer:
                 res[k]=v
         return res
     def load(self,state):
-
-        raise NotImplemented
+        for k,v in state.items():
+            setattr(self,k,v)
 
 
     def reset_grad(self):

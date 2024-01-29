@@ -10,11 +10,11 @@ from utils import evaluate_performance, monk_classification
 monk_encoding= encode_dataset_to_one_hot(monk_features)
 
 #loading monk dataset
-monk1_tr=TakeMonksDataSet("FilesData/monks-1.train")
+monk1_tr=TakeMonksDataSet("FilesData/monks-2.train")
 Data=convert_to_one_hot(["a1","a2","a3","a4","a5","a6"],["class"],monk_encoding,monk1_tr)
 dataset=DataSet(Data,17,1)
 
-monk1_ts=TakeMonksDataSet("FilesData/monks-1.test")
+monk1_ts=TakeMonksDataSet("FilesData/monks-2.test")
 Data_ts=convert_to_one_hot(["a1","a2","a3","a4","a5","a6"],["class"],monk_encoding,monk1_ts)
 ts_dataset=DataSet(Data_ts,17,1)
 
