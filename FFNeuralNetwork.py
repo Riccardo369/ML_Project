@@ -64,9 +64,9 @@ class FFNeuralNetwork:
         
         weights=self._output_layer.get_weights()
         
-        for i,layer in reversed(self._hidden_layers[1:]):
+        for i in range(len(self._hidden_layers)-1,0,-1):
             
-            signal_errors=layer.backward(signal_errors,
+            signal_errors=self._hidden_layers[i].backward(signal_errors,
                                              self._hidden_layers[i-1].get_output(),
                                              weights,
                                              learning_rate,
@@ -74,7 +74,7 @@ class FFNeuralNetwork:
                                              weight_decay
                                              )
             
-            weights=layer.get_weights()
+            weights=self._hidden_layers[i].get_weights()
             
         signal_errors=self._hidden_layers[0].backward(signal_errors,
                                                           self._input_layer.get_output(),
