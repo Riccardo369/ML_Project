@@ -35,16 +35,22 @@ print(f"beginning training with {dataset.size()} pattern, and {ts_dataset.size()
 
 initial_state = nn.dump()
 
-
 STOCHASTIC=1
 BATCH=-1
 
 best_model_state=None
 best_model_performance=np.inf
 best_model_index=-1
+#grid=ParameterGrid({
+    #"learning_rate":np.array([0.3, 0.6]),
+    #"weight_decay":np.array([0.0, 0.002]),
+    #"momentum":np.array([0.0, 0.2]),
+    #"batch_size":np.array([STOCHASTIC]),
+  #})
+
 grid=ParameterGrid({
-    "learning_rate":np.array([0.01,0.02,0.1]),
-    "weight_decay":np.array([0]),
+    "learning_rate":np.array([0.3]),
+    "weight_decay":np.array([0.0]),
     "momentum":np.array([0.0]),
     "batch_size":np.array([STOCHASTIC]),
   })
@@ -64,7 +70,7 @@ for i in range(grid.get_size()):
     momentum = hyperparameters["momentum"]
     batch_size = dataset.size() if hyperparameters["batch_size"] < 0 else hyperparameters["batch_size"]
 
-    for epoch in range(300):
+    for epoch in range(200):
         
         nn.fit(dataset.get_dataset(),
             learning_rate,
@@ -81,19 +87,24 @@ for i in range(grid.get_size()):
         validation_performance_prec.append(vl_prec)
 
     #Show plots
-    plt.plot(training_performance,label="training loss")
-    plt.plot(validation_performance,label="validation loss")
-
-    plt.plot(training_performance_prec,label="training precision")
-    plt.plot(validation_performance_prec,label="validation precision")
-    plt.legend()
-
+    plt.plot(training_performance,label="training loss",color="red")
+    plt.plot(validation_performance,label="validation loss",color="blue")
     plt.title(f'MONK1,{ " ".join([ f"{k}={v} " for k,v in grid[i].items()])}')
+    plt.legend()
     
-    plt.savefig(f'Plot graphic/MONK1, {" ".join([ f"{k}={v} " for k,v in grid[i].items()])}.png')
+    #plt.savefig(f'Plot graphic/MONK1, {" ".join([ f"{k}={v} " for k,v in grid[i].items()])} {i+1} (Loss).png')
+    
+    plt.show()
+    plt.clf()
+
+    plt.plot(training_performance_prec,label="training precision",color="orange")
+    plt.plot(validation_performance_prec,label="validation precision",color="blue")
+    plt.title(f'MONK1,{ " ".join([ f"{k}={v} " for k,v in grid[i].items()])}')
+    plt.legend()
+    
+    #plt.savefig(f'Plot graphic/MONK1, {" ".join([ f"{k}={v} " for k,v in grid[i].items()])} {i+1} (Precision).png')
+    
+    plt.show()
+    plt.clf()
     
     print(f'MONK1, {grid[i]}')
-
-    #plt.show()
-    
-    plt.clf()
