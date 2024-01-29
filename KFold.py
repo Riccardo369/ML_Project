@@ -8,6 +8,7 @@ class KFold:
         self._folds_number=folds_number
         self._folds= np.array_split(data,folds_number)
         self._input_size=input_size
+        
         self._output_size=output_size
     def train(self,model,batch_size,classification_function=lambda x:x):
         best_fold_index=0
@@ -22,8 +23,10 @@ class KFold:
             for epoch in range(1000):
                 training.Work(batch_size,False)
                 evaluation.Work(batch_size,False)
+                
             if evaluation.GetMetrics()["Loss"][-1] < best_fold_performance["validation"]["Loss"][-1]:
                 best_fold_performance=training.GetMetrics()
                 best_fold_index=i
+                
             print("epoch ",i+1,"tr precision ",training.GetMetrics()["Precision"][-1],"\tloss ",training.GetMetrics()["Loss"][-1],epoch+1)
         return {"training":self._folds[best_fold_index]["training"],"validation":evaluation.GetMetrics()}

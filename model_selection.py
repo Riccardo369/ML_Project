@@ -2,6 +2,7 @@ import numpy as np
 from Evaluation import CrossValidation
 from Phase import EvaluationPhase, TrainPhase
 
+# Do the model selection, considering model, dataset and specific combination of hyperparameters
 def model_selection(Model, DataSet, LearningRate, WeightDecay, FoldsNumber, Threshold=0 ,Steps=50):
   print(f"beginning model selection with {Steps} steps and {FoldsNumber} folds")
   ModelSelectionPerformance=dict()
