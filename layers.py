@@ -37,7 +37,7 @@ class AbstractLayer:
     
     def load(self,state):
         for k,v in state.items():
-            setattr(self,k,v)
+            setattr(self,k,copy.deepcopy(v))
 
 
     def reset_grad(self):
