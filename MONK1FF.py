@@ -9,23 +9,26 @@ from loss_functions import mee_loss,mse_loss
 from utils import evaluate_performance, monk_classification
 monk_encoding= encode_dataset_to_one_hot(monk_features)
 
-#loading monk dataset
+#loading monk dataset for trainin
 monk1_tr=TakeMonksDataSet("FilesData/monks-1.train")
 Data=convert_to_one_hot(["a1","a2","a3","a4","a5","a6"],["class"],monk_encoding,monk1_tr)
 dataset=DataSet(Data,17,1)
 
+#Loading monk for validation
 monk1_ts=TakeMonksDataSet("FilesData/monks-1.test")
 Data_ts=convert_to_one_hot(["a1","a2","a3","a4","a5","a6"],["class"],monk_encoding,monk1_ts)
 ts_dataset=DataSet(Data_ts,17,1)
 
-nn=FFNeuralNetwork(
+#Create model
+nn = FFNeuralNetwork(
     InputLayer(17,np.eye(17),lambda x:x,lambda x:1),
     [
         Layer(5,np.random.rand(5,17)*0.5),
     ],
-    OutputLayer(1,np.random.rand(1,5),sigmoid,sigmoid_prime)
+    OutputLayer(1,np.random.rand(1,5),sigmoid, sigmoid_prime)
 )
 
+#Start training
 print(f"beginning training with {dataset.size()} pattern, and {ts_dataset.size()} pattern in the vl set")
 
 training_performance=[]
@@ -51,6 +54,7 @@ for epoch in range(300):
     validation_performance_prec.append(vl_prec)
 
 
+#Show plots
 plt.plot(training_performance,label="training loss")
 plt.plot(validation_performance,label="validation loss")
 plt.legend()
