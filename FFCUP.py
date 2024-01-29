@@ -3,12 +3,11 @@ from layers import InputLayer, Layer, OutputLayer
 
 from matplotlib import pyplot as plt
 import numpy as np
-from Dataset import TakeMonksDataSet, convert_to_one_hot, encode_dataset_to_one_hot,DataSet,monk_features,TakeCupDataset
+from Dataset import TakeMonksDataSet, convert_to_one_hot, encode_dataset_to_one_hot,DataSet,TakeCupDataset
 from activation_functions import sigmoid,sigmoid_prime
 from loss_functions import mee_loss,mse_loss
 from parameter_grid import ParameterGrid
 from utils import evaluate_performance, k_fold, monk_classification
-monk_encoding= encode_dataset_to_one_hot(monk_features)
 
 #loading monk dataset
 cup_tr=TakeCupDataset("FilesData/ML-CUP23-TR.csv")
@@ -31,7 +30,7 @@ print(f"beginning training with {dataset.size()} pattern, and {vl_dataset.size()
 #config parameters
 learning_rate=0.6
 weight_decay=0.0
-momentum=0.3
+momentum=0.8
 batch_size=dataset.size()
 folds_number=5
 
@@ -48,8 +47,8 @@ best_model_index=-1
 grid=ParameterGrid({
     "learning_rate":np.array([0.1]),
     "weight_decay":np.array([0]),
-    "momentum":np.array([0.02]),
-    "batch_size":np.array([STOCHASTIC,BATCH]),
+    "momentum":np.array([0.0]),
+    "batch_size":np.array([BATCH]),
   })
 
 for i in range(grid.get_size()):
@@ -63,7 +62,7 @@ for i in range(grid.get_size()):
         validation_mse=[]
         validation_mee=[]
         training_mee=[]
-        for epoch in range(300):
+        for epoch in range(1000):
             nn.fit(tr,
                 learning_rate=hyperparameters["learning_rate"],
                 weight_decay=hyperparameters["weight_decay"],
@@ -89,7 +88,7 @@ validation_mee=[]
 training_mee=[]
 best_hyperparameters=grid[best_model_index]
 nn.load(initial_state)
-for epoch in range(300):
+for epoch in range(1000):
             nn.fit(dataset.get_dataset(),
                 learning_rate=best_hyperparameters["learning_rate"],
                 weight_decay=best_hyperparameters["weight_decay"],

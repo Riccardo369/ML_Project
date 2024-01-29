@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 
 class AbstractLayer:
@@ -31,10 +32,7 @@ class AbstractLayer:
     def dump(self):
         res=dict()
         for k,v in vars(self).items():
-            if isinstance(v,np.ndarray):
-                res[k]=np.copy(v)
-            else:
-                res[k]=v
+            res[k]=copy.deepcopy(v)
         return res
     
     def load(self,state):
