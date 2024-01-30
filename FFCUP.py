@@ -52,12 +52,15 @@ grid=ParameterGrid({
     "batch_size":np.array([STOCHASTIC]),
   })
 
-patience=50
+patience=100
+max_epochs=10000
+error_percent=1.1
 
 for i in range(grid.get_size()):
     print("hyperparameters combination no.",i+1,"=",grid[i])
     hyperparameters=grid[i]
     mee_performance=0
+    plt.figure(figsize=(12,6))
     for j,(tr,vl) in enumerate(folds):
         print("fold no.",j+1)
         nn.load(initial_state)
@@ -68,10 +71,9 @@ for i in range(grid.get_size()):
 
         old_vl_mee=np.inf
         plt.clf()
-        plt.figure(figsize=(12,6))
         plt.title(f"comb no.{i+1}, internal set {folds_number} fold with values "+" ".join([ f"{k}={v}" for k,v in grid[i].items()]))
         epoch=0
-        max_epochs=10000
+        stop_epochs=0
         while (True):
             nn.fit(tr,
                 learning_rate=hyperparameters["learning_rate"],
@@ -90,11 +92,16 @@ for i in range(grid.get_size()):
             plt.plot(validation_mee,label="validation MEE",color="blue")
             plt.plot(validation_mse,label="training MSE",color="red")
             
-            if (np.abs(np.mean(validation_mee[-patience:])-old_vl_mee) > 0 or epoch>=max_epochs) and epoch>=patience:
-                break
+            if (old_vl_mee/vl_mee)>error_percent:
+                stop_epochs+=1
             else:
-                 old_vl_mee=np.mean(validation_mee[-patience:])
+                stop_epochs=0
+            if stop_epochs >= patience or epoch >= max_epochs:
+                 break
             epoch+=1
+                
+                
+        
         mee_performance+=vl_mee
     mee_performance/=folds_number
     print("final performance",mee_performance)
