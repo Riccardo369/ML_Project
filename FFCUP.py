@@ -18,10 +18,11 @@ vl_dataset=DataSet(cup_tr,10,3)
 nn=FFNeuralNetwork(
     InputLayer(10,np.eye(10),lambda x:x,lambda x:1),
     [
-        Layer(5,np.random.rand(5,10)*0.5),
-        Layer(5,np.random.rand(5,5)*0.5),
+        Layer(10,np.random.rand(10,10)*0.5),
+        Layer(10,np.random.rand(10,10)*0.5),
+        Layer(10,np.random.rand(10,10)*0.5),
     ],
-    OutputLayer(3,np.random.rand(3,5),lambda x:x,lambda x:1)
+    OutputLayer(3,np.random.rand(3,10),lambda x:x,lambda x:1)
 )
 
 print(f"beginning training with {dataset.size()} pattern, and {vl_dataset.size()} pattern in the vl set")
@@ -45,16 +46,18 @@ best_model_performance=np.inf
 best_model_index=-1
 
 grid=ParameterGrid({
-    "learning_rate":np.array([0.1]),
-    "weight_decay":np.array([0]),
-    "momentum":np.array([0.0]),
-    "batch_size":np.array([BATCH]),
+    "learning_rate":np.array([0.01,0.001,0.0001]),
+    "weight_decay":np.array([0.0]),
+    "momentum":np.array([0.0,0.1,0.4,0.8]),
+    "batch_size":np.array([STOCHASTIC]),
   })
+
+patience=50
 
 for i in range(grid.get_size()):
     print("hyperparameters combination no.",i+1,"=",grid[i])
     hyperparameters=grid[i]
-    model_performance=0
+    mee_performance=0
     for j,(tr,vl) in enumerate(folds):
         print("fold no.",j+1)
         nn.load(initial_state)
@@ -62,7 +65,14 @@ for i in range(grid.get_size()):
         validation_mse=[]
         validation_mee=[]
         training_mee=[]
-        for epoch in range(1000):
+
+        old_vl_mee=np.inf
+        plt.clf()
+        plt.figure(figsize=(12,6))
+        plt.title(f"comb no.{i+1}, internal set {folds_number} fold with values "+" ".join([ f"{k}={v}" for k,v in grid[i].items()]))
+        epoch=0
+        max_epochs=10000
+        while (True):
             nn.fit(tr,
                 learning_rate=hyperparameters["learning_rate"],
                 weight_decay=hyperparameters["weight_decay"],
@@ -75,12 +85,23 @@ for i in range(grid.get_size()):
             training_mee.append(tr_mee)
             validation_mse.append(vl_mse)
             validation_mee.append(vl_mee)
-        model_performance+=vl_mse
-    model_performance/=folds_number
-    print("final performance",model_performance)
-    if model_performance < best_model_performance:
-        best_model_performance=model_performance
+            plt.plot(training_mee,label="training MEE",color="blue")
+            plt.plot(training_mse,label="training MSE",color="red")
+            plt.plot(validation_mee,label="validation MEE",color="blue")
+            plt.plot(validation_mse,label="training MSE",color="red")
+            
+            if (np.abs(np.mean(validation_mee[-patience:])-old_vl_mee) > 0 or epoch>=max_epochs) and epoch>=patience:
+                break
+            else:
+                 old_vl_mee=np.mean(validation_mee[-patience:])
+            epoch+=1
+        mee_performance+=vl_mee
+    mee_performance/=folds_number
+    print("final performance",mee_performance)
+    if mee_performance < best_model_performance:
+        best_model_performance=mee_performance
         best_model_index=i
+    plt.savefig(f"Plot Graphic/CUP/{folds_number}-fold {" ".join([ f"{k}={v}" for k,v in grid[i].items()])}.png")
     
 training_mse=[]
 validation_mse=[]
@@ -101,14 +122,15 @@ for epoch in range(1000):
             training_mee.append(tr_mee)
             validation_mse.append(vl_mse)
             validation_mee.append(vl_mee)
-    
-
+"""     
+plt.clf()
 plt.plot(training_mse,label="training MSE")
 plt.plot(validation_mse,label="test MSE")
 plt.legend()
 plt.show()
 
+plt.clf()
 plt.plot(training_mee,label="training MEE")
 plt.plot(validation_mee,label="test MEE")
 plt.legend()
-plt.show()
+plt.show() """

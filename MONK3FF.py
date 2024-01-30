@@ -43,9 +43,9 @@ best_model_performance=np.inf
 best_model_index=-1
 
 grid=ParameterGrid({
-    "learning_rate":np.array([0.1, 0.3]),
-    "weight_decay":np.array([0.001]),
-    "momentum":np.array([0.2, 0.25, 0.3]),
+    "learning_rate":np.array([0.005]),
+    "weight_decay":np.array([0.0001]),
+    "momentum":np.array([0.9]),
     "batch_size":np.array([STOCHASTIC]),
   })
 
@@ -64,8 +64,8 @@ for i in range(grid.get_size()):
     momentum = hyperparameters["momentum"]
     batch_size = dataset.size() if hyperparameters["batch_size"] < 0 else hyperparameters["batch_size"]
 
-    for epoch in range(200):
-        
+    for epoch in range(400):
+        np.random.shuffle(dataset.get_dataset())
         nn.fit(dataset.get_dataset(),
             learning_rate,
             weight_decay,
@@ -85,20 +85,20 @@ for i in range(grid.get_size()):
     plt.plot(validation_performance,label="validation loss",color="blue")
     plt.title(f'MONK3,{ " ".join([ f"{k}={v} " for k,v in grid[i].items()])}')
     plt.legend()
+    plt.show()
     
     plt.savefig(f'Plot graphic/MONK3, {" ".join([ f"{k}={v} " for k,v in grid[i].items()])} {i+1} (Loss).png')
     
-    #plt.show()
     plt.clf()
 
     plt.plot(training_performance_prec,label="training precision",color="orange")
     plt.plot(validation_performance_prec,label="validation precision",color="blue")
     plt.title(f'MONK3,{ " ".join([ f"{k}={v} " for k,v in grid[i].items()])}')
     plt.legend()
+    plt.show()
     
     plt.savefig(f'Plot graphic/MONK3, {" ".join([ f"{k}={v} " for k,v in grid[i].items()])} {i+1} (Precision).png')
     
-    #plt.show()
     plt.clf()
     
     print(f'MONK3, {grid[i]}')

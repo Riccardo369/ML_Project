@@ -50,9 +50,9 @@ best_model_index=-1
   #})
 
 grid=ParameterGrid({
-    "learning_rate":np.array([0.1]),
-    "weight_decay":np.array([0.0]),
-    "momentum":np.array([0.0]),
+    "learning_rate":np.array([0.02]),
+    "weight_decay":np.array([0.00001]),
+    "momentum":np.array([0.9]),
     "batch_size":np.array([STOCHASTIC]),
   })
 
@@ -71,8 +71,8 @@ for i in range(grid.get_size()):
     momentum = hyperparameters["momentum"]
     batch_size = dataset.size() if hyperparameters["batch_size"] < 0 else hyperparameters["batch_size"]
 
-    for epoch in range(200):
-        
+    for epoch in range(400):
+        np.random.shuffle(dataset.get_dataset())
         nn.fit(dataset.get_dataset(),
             learning_rate,
             weight_decay,
