@@ -1,0 +1,62 @@
+Epoch = 400
+Mean / Variance of Train / Validation loss examples = 10
+
+- STOCASTIC GSD
+
+Monk1 = learning:                      0.01
+        weight:                        0.0
+        momentum:                      0.15        
+
+        Train loss = Mean: 0.024895852077022173, Variance = 0.00023965301844646863
+        Validation loss = Mean: 0.04749438970339453, Variance = 0.0006725230922259089
+        Train accuracy = Mean: 95.80645161290323, Variance = 11.29032258064516
+        Validation accuracy = Mean: 90.60185185185186, Variance = 46.148405349794245
+
+Monk2 = learning:                      0.02
+        weight:                        0.00001
+        momentum:                      0.9
+
+        Train loss = Mean: 0.003383680962956813, Variance = 2.2799339186705845e-05
+        Validation loss = Mean: 0.0057121411886226995, Variance = 8.553490216978714e-05
+        Train accuracy = Mean: 99.70414201183432, Variance = 0.7877875424529944
+        Validation accuracy = Mean: 99.39814814814814, Variance = 2.9921124828532246
+
+        
+Monk3 = learning:                      0.005
+        weight:                        0.0001
+        momentum:                      0.9
+
+        Train loss = Mean: 0.04038764672953821, Variance = 1.533716007250804e-09
+        Validation loss = Mean: 0.03388700879699569, Variance = 1.493007700536627e-09
+        Train accuracy = Mean: 93.44262295081968, Variance = 0.0
+        Validation accuracy = Mean: 97.2222222222222, Variance = 2.0194839173657902e-28
+                  
+                 
+- BATCH
+
+Monk1 = learning:                      0.45
+        weight:                        0.0
+        momentum:                      0.55
+
+        Train loss = Mean: 0.04758156660336289, Variance = 7.2464493637171e-05
+        Validation loss = Mean: 0.07330658856984221, Variance = 0.00015559074488996557
+        Train accuracy = Mean: 88.70967741935483, Variance = 10.015608740894896
+        Validation accuracy = Mean: 77.96296296296296, Variance = 18.41992455418382
+
+Monk2 = learning:                      0.1
+        weight:                        0.0
+        momentum:                      0.1
+        
+        Train loss = Mean: 0.11319292377960366, Variance = 2.0271418075253813e-06
+        Validation loss = Mean: 0.11119004804024779, Variance = 4.601831389458593e-07
+        Train accuracy = Mean: 63.25443786982248, Variance = 1.1519204509646048
+        Validation accuracy = Mean: 66.13425925925927, Variance = 1.0079089506172865    
+
+Monk3 = learning:                      0.1
+        weight:                        0.001  
+        momentum:                      0.1    
+        
+        Train loss = Mean: 0.0695660111562155, Variance = 0.00023405902703807366
+        Validation loss = Mean: 0.06750900455336092, Variance = 0.0002561155474771916
+        Train accuracy = Mean: 91.6393442622951, Variance = 26.444504165546924
+        Validation accuracy = Mean: 95.27777777777776, Variance = 23.01097393689984 
